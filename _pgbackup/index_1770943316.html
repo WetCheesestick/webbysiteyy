@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+        <title>Blank Portfolio Template</title>
+        <meta name="description" content="Blank portfolio template with an opening video stack reveal."/>
+        <link rel="stylesheet" href="assets/css/styles.css"/>
+        <!-- GSAP (used for the opening effect) -->
+        <script defer src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+        <script defer src="assets/js/opening.js"></script>
+        <script defer src="assets/js/super-syd-cursor.js"></script>
+    </head>
+    <body class="scope-239">
+        <!-- Header is faded in at the end of the opening sequence -->
+        <header class="site-header">
+            <a class="brand" href="index.html">Julian Schnitt</a>
+            <nav class="nav">
+                <a href="projects.html">Projects</a>
+                <a href="about.html">About</a>
+                <a href="privacy-policy.html">Privacy</a>
+            </nav>
+        </header>
+        <!-- OPENING / HERO -->
+        <section class="homepage-hero">
+            <!-- This is the “tile” that starts centered, then expands to fullscreen. -->
+            <div class="main-item" aria-label="Opening sequence">
+                <!-- Opening stack videos:
+           - The FIRST .opening-item is visible immediately inside the tile.
+           - The script swipes through each clip in order.
+           - The background clip is the final clip, then the tile expands fullscreen.
+           Swap the video file paths to use your own clips.
+      -->
+                <div class="opening-item">
+                    <video class="vid" autoplay muted loop playsinline preload="auto" src="assets/videos/opening_01.mp4" data-src="assets/videos/opening_01.mp4"></video>
+                </div>
+                <div class="opening-item not-first">
+                    <video class="vid" autoplay muted loop playsinline preload="auto" src="assets/videos/opening_02.mp4" data-src="assets/videos/opening_02.mp4"></video>
+                </div>
+                <div class="opening-item not-first">
+                    <video class="vid" autoplay muted loop playsinline preload="auto" src="assets/videos/opening_03.mp4" data-src="assets/videos/opening_03.mp4"></video>
+                </div>
+                <div class="opening-item not-first is-final">
+                    <video class="vid" autoplay muted loop playsinline preload="auto" src="assets/videos/background.mp4" data-src="assets/videos/background.mp4"></video>
+                </div>
+            </div>
+        </section>
+        <!-- Page content underneath -->
+        <main class="page">
+            <section class="coming-soon-section" aria-label="Super Syd teaser">
+                <div class="super-syd-cursor" aria-hidden="true"></div>
+                <div class="super-syd-trail" aria-hidden="true"></div>
+                <div class="coming-soon-grid">
+                    <div class="coming-soon-media-column">
+                        <h2 class="coming-soon-title"> <img class="coming-soon-text-image" src="assets/images/Super%20Syd%20Text.png" alt="Super Syd text treatment"/> <span class="coming-soon-copy">... Coming soon,</span> </h2>
+                        <div class="coming-soon-video-wrap">
+                            <video class="coming-soon-video" controls playsinline preload="metadata" src="assets/videos/SuperSyd%20Seed%20and%20Spark%20Video%20YT.mp4"></video>
+                        </div>
+                    </div>
+                    <aside class="seed-story-panel" aria-label="Super Syd Seed and Spark story">
+                        <div class="seed-story-scroll">
+                            <p class="seed-story-source">
+              Adapted from: <a href="https://seedandspark.com/fund/super-syd-film#story" target="_blank" rel="noreferrer">
+                Seed&amp;Spark - Super Syd </a> </p>
+                            <h3>Mission Statement</h3>
+                            <p>
+              Super Syd is inspired by the adventures my sisters and I shared as kids and the bittersweet distance
+              of growing up. We want to bring this story to life because it celebrates courage, creativity, and the
+              deep bond between siblings, while reminding us to cherish imagination and family connection. </p>
+                            <h3>The Story</h3>
+                            <figure>
+                                <img src="assets/images/super-syd-story/story-open.png" alt="Super Syd story opening art" loading="lazy"/>
+                            </figure>
+                            <p>
+              The story opens with 10-year-old Sydney crafting the ultimate movie-night surprise for her older
+              sister, Sloane, who is distracted upstairs packing for college with her boyfriend Josh, aka "the troll"
+              in Syd's eyes. </p>
+                            <p>
+              When Sloane bails on movie night to go to Josh's house, Syd refuses to let their tradition fall apart.
+              She transforms into <strong>Super Syd</strong>, sneaks out, and scooters all the way to Josh's place,
+              only to arrive too late. </p>
+                            <p>
+              Back at the house, Syd storms to her room, heartbroken. Sloane follows, this time donning her own
+              forgotten cape, and the sisters finally have the honest heart-to-heart they have been avoiding. </p>
+                            <p>
+              The film ends with the two reunited, capes on, sharing their long-awaited movie night, <em>side by side.</em> </p>
+                            <h4>My Supers!</h4>
+                            <figure>
+                                <img src="assets/images/super-syd-story/my-supers.jpg" alt="My Supers image" loading="lazy"/>
+                            </figure>
+                            <p><strong>These are my own super sisters!</strong></p>
+                            <p>
+              Like <strong>Sloane</strong>, I have younger sisters. Sailor and Kennedy are 13 and 14 and live back
+              home in Texas. Every time I go home, I am struck by how much they have grown. </p>
+                            <p>
+              Like <strong>Sydney</strong>, I also have an older sister. My sister Sasha is my best friend, and I
+              cannot imagine growing up alongside anyone else. We stay connected through FaceTime debriefs and an
+              endless exchange of Instagram Reels. </p>
+                            <p>
+              My sisters are the reason <strong><em>Super Syd</em></strong> exists, and I cannot wait to celebrate
+              and represent our sisterhood on the big screen. </p>
+                            <h4>Our Previs!</h4>
+                            <p>
+              Attached is a pre-visualized scene we shot as both a reference and a sneak peek of the action to come.
+              Grab some popcorn and enjoy! </p>
+                            <div class="seed-video-embed">
+                                <iframe src="https://www.youtube.com/embed/D_Eh8zvQmb8" title="Super Syd previs" loading="lazy" allowfullscreen></iframe>
+                            </div>
+                            <figure>
+                                <img src="assets/images/super-syd-story/inspirations.png" alt="Film inspirations board" loading="lazy"/>
+                            </figure>
+                            <p>
+              These four films serve as key inspirations for <strong><em>Super Syd</em></strong>, each influencing a
+              different layer of the story. </p>
+                            <ul class="seed-story-list">
+                                <li>
+                                    <strong>Bridge to Terabithia:</strong> children using imagination as an emotional coping mechanism.
+                                </li>
+                                <li>
+                                    <strong>Ramona and Beezus:</strong> heartfelt sisterhood, conflict, and unconditional support.
+                                </li>
+                                <li>
+                                    <strong>Luca:</strong> fear of losing those closest to you while learning distance does not weaken love.
+                                </li>
+                                <li>
+                                    <strong>Scott Pilgrim vs. The World:</strong> playful camera language and bold character energy.
+                                </li>
+                            </ul>
+                            <h4>Themes!</h4>
+                            <figure>
+                                <img src="assets/images/super-syd-story/themes.png" alt="Super Syd themes board" loading="lazy"/>
+                            </figure>
+                            <h4>Characters!</h4>
+                            <figure>
+                                <img src="assets/images/super-syd-story/character-sydney.png" alt="Sydney character card" loading="lazy"/>
+                            </figure>
+                            <div class="seed-character-grid">
+                                <img src="assets/images/super-syd-story/character-sloane.png" alt="Sloane character card" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/character-josh.png" alt="Josh character card" loading="lazy"/>
+                            </div>
+                            <p class="seed-center">AKA the troll.</p>
+                            <h4>Visual Style!</h4>
+                            <figure>
+                                <img src="assets/images/super-syd-story/visual-style.png" alt="Visual style board" loading="lazy"/>
+                            </figure>
+                            <p>
+              We want <strong><em>Super Syd</em></strong> to represent the joy and excitement of childhood with bright
+              colors and playful camera movement that reflect the imaginative mind of a child. </p>
+                            <h4>How We Plan On Using Our Funds</h4>
+                            <figure>
+                                <img src="assets/images/super-syd-story/funds-breakdown.png" alt="Funding breakdown graphic" loading="lazy"/>
+                            </figure>
+                            <p>
+              Our total crowdfunding goal is <strong><em>$10,000</em></strong> by <strong><em>March 4th</em></strong>.
+              Every contribution helps us bring this production to life. </p>
+                            <p>
+              We aim to begin principal photography in <strong><em>mid April 2026</em></strong>. This campaign helps
+              bridge pre-production and production so the project can move into filming. </p>
+                            <p>
+              Support of any kind is welcome, and a single follow, like, share, or pledge makes a huge difference. </p>
+                            <figure>
+                                <img src="assets/images/super-syd-story/thanks.png" alt="Thanks for the support art" loading="lazy"/>
+                            </figure>
+                            <p class="seed-center">And see you at the festivals.</p>
+                            <p class="seed-center">- Skylar Park and The Super Syd Team</p>
+                            <div class="seed-gif-grid">
+                                <img src="assets/images/super-syd-story/gif-1.gif" alt="Super Syd gif 1" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-2.gif" alt="Super Syd gif 2" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-3.gif" alt="Super Syd gif 3" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-4.gif" alt="Super Syd gif 4" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-5.gif" alt="Super Syd gif 5" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-6.gif" alt="Super Syd gif 6" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-7.gif" alt="Super Syd gif 7" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-8.gif" alt="Super Syd gif 8" loading="lazy"/>
+                                <img src="assets/images/super-syd-story/gif-9.gif" alt="Super Syd gif 9" loading="lazy"/>
+                            </div>
+                            <p> <a class="seed-story-cta" href="https://seedandspark.com/fund/super-syd-film#story" target="_blank" rel="noreferrer">
+                View the full campaign on Seed&amp;Spark </a> </p>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+            <div class="projects-intro">
+                <h1 class="h1">Projects</h1>
+                <p class="lede">
+        This is a blank starter site. Replace the videos in <code>assets/videos/</code> and update
+        the project cards in <a href="projects.html">Projects</a>. </p>
+            </div>
+            <section class="cards">
+                <a class="card has-image card-poster" href="projects.html"> <div class="card-thumb poster-thumb">
+                        <img src="assets/images/AstrayPoster.png" alt="Aastry poster"/>
+                    </div> <div class="card-title">Aastry</div> <div class="card-meta">Cinematographer • Narrative</div> </a>
+                <a class="card has-image card-poster" href="projects.html"> <div class="card-thumb poster-thumb">
+                        <img src="assets/images/AstrayPoster.png" alt="Aastry poster"/>
+                    </div> <div class="card-title">Crimson Ring</div> <div class="card-meta">Cinematographer • Narrative</div> </a>
+                <a class="card has-image card-poster" href="projects.html"> <div class="card-thumb poster-thumb">
+                        <img src="assets/images/AstrayPoster.png" alt="Aastry poster"/>
+                    </div> <div class="card-title">Aastry</div> <div class="card-meta">Cinematographer • Narrative</div> </a>
+            </section>
+        </main>
+        <footer class="site-footer">
+            <span>© <span id="year"></span> YOUR NAME</span>
+        </footer>
+        <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+    </body>
+</html>

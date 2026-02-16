@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Project 02 Thumbnail</title>
+  <desc id="desc">Cool-toned abstract image with circles and frame marks.</desc>
+  <defs>
+    <linearGradient id="bg" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b2330"/>
+      <stop offset="55%" stop-color="#164a63"/>
+      <stop offset="100%" stop-color="#4aa1b8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <circle cx="420" cy="350" r="240" fill="#8bd8ef" fill-opacity=".25"/>
+  <circle cx="920" cy="470" r="320" fill="#d4f8ff" fill-opacity=".17"/>
+  <rect x="110" y="110" width="1380" height="780" fill="none" stroke="#dff7ff" stroke-opacity=".5" stroke-width="5"/>
+  <text x="128" y="875" fill="#f0fbff" opacity=".92" font-family="Helvetica, Arial, sans-serif" font-size="58" letter-spacing="5">PROJECT 02</text>
+</svg>
