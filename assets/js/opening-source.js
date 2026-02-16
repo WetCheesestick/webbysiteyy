@@ -1,5 +1,5 @@
 (() => {
-  const OPENING_USE_YOUTUBE = "ON"; // ON = use YouTube, OFF = use local MP4 files.
+  const OPENING_USE_YOUTUBE = "OFF"; // ON = use YouTube, OFF = use local MP4 files.
 
   const embeds = Array.from(document.querySelectorAll(".opening-yt[data-yt-id]"));
   if (embeds.length === 0) return;
