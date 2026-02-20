@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Project 03 Thumbnail</title>
+  <desc id="desc">Neutral monochrome abstract panel with grid accents.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#111214"/>
+      <stop offset="60%" stop-color="#2a2d33"/>
+      <stop offset="100%" stop-color="#5d646e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <path d="M0 650 L1600 220" stroke="#ffffff" stroke-opacity=".14" stroke-width="8"/>
+  <g stroke="#ffffff" stroke-opacity=".16">
+    <line x1="180" y1="120" x2="180" y2="900"/>
+    <line x1="380" y1="120" x2="380" y2="900"/>
+    <line x1="580" y1="120" x2="580" y2="900"/>
+    <line x1="780" y1="120" x2="780" y2="900"/>
+  </g>
+  <rect x="100" y="100" width="1400" height="800" fill="none" stroke="#e8edf6" stroke-opacity=".52" stroke-width="4"/>
+  <text x="130" y="875" fill="#f2f5fa" opacity=".92" font-family="Helvetica, Arial, sans-serif" font-size="58" letter-spacing="5">PROJECT 03</text>
+</svg>

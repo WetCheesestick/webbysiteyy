@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <title>Studio</title>
+    <style>
+      :root{
+        --bg:#0d0f13;
+        --panel:#13161d;
+        --panel-2:#10131a;
+        --line:rgba(255,255,255,.16);
+        --fg:#f2f5f9;
+        --muted:rgba(242,245,249,.7);
+        --ok:#4ade80;
+        --error:#fb7185;
+        --brand:#7dd3fc;
+      }
+      *{box-sizing:border-box}
+      body{
+        margin:0;
+        min-height:100vh;
+        background:radial-gradient(1000px 500px at 0% 0%, #152236 0%, transparent 45%), var(--bg);
+        color:var(--fg);
+        font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      }
+      .wrap{
+        max-width:1500px;
+        margin:0 auto;
+        padding:20px 14px 40px;
+      }
+      .topbar{
+        display:flex;
+        flex-wrap:wrap;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:14px;
+      }
+      .title h1{
+        margin:0;
+        font-size:28px;
+        letter-spacing:.02em;
+      }
+      .subtitle{
+        margin:2px 0 0;
+        color:var(--muted);
+        font-size:13px;
+      }
+      .top-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+      }
+      button,input,select,textarea{
+        border:1px solid var(--line);
+        background:var(--panel-2);
+        color:var(--fg);
+        border-radius:10px;
+        font:inherit;
+      }
+      button{
+        padding:10px 12px;
+        cursor:pointer;
+      }
+      input,select,textarea{
+        width:100%;
+        padding:10px 12px;
+      }
+      textarea{
+        min-height:84px;
+        resize:vertical;
+      }
+      .status-row{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        margin-bottom:12px;
+      }
+      .status{
+        margin:0;
+        font-size:14px;
+      }
+      .status[data-status="ok"]{color:var(--ok)}
+      .status[data-status="error"]{color:var(--error)}
+      .unsaved{
+        border:1px solid var(--line);
+        border-radius:999px;
+        padding:4px 10px;
+        font-size:12px;
+        color:var(--muted);
+      }
+      .unsaved[data-unsaved="yes"]{
+        color:#fff;
+        border-color:var(--brand);
+        background:rgba(125,211,252,.14);
+      }
+      .shell{
+        display:grid;
+        gap:14px;
+        grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr);
+      }
+      .panel{
+        border:1px solid var(--line);
+        background:var(--panel);
+        border-radius:14px;
+        padding:14px;
+      }
+      h2{
+        margin:0 0 10px;
+        font-size:18px;
+      }
+      h3{
+        margin:0 0 10px;
+        font-size:15px;
+      }
+      .muted{
+        margin:0 0 10px;
+        color:var(--muted);
+        font-size:13px;
+      }
+      .grid-2{
+        display:grid;
+        gap:12px;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+      .grid-3{
+        display:grid;
+        gap:12px;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+      .stack{
+        display:grid;
+        gap:12px;
+      }
+      label{
+        display:block;
+        margin:0 0 5px;
+        font-size:12px;
+        color:var(--muted);
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
+      .toggle{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:8px;
+        border:1px solid var(--line);
+        background:var(--panel-2);
+        border-radius:10px;
+        padding:10px 12px;
+      }
+      .toggle span{
+        font-size:14px;
+      }
+      .toggle input{
+        width:auto;
+      }
+      .studio-sort-list{
+        list-style:none;
+        margin:0;
+        padding:0;
+        display:grid;
+        gap:8px;
+      }
+      .studio-sort-item{
+        display:grid;
+        align-items:center;
+        gap:10px;
+        grid-template-columns:auto 1fr auto;
+        border:1px solid var(--line);
+        background:var(--panel-2);
+        border-radius:10px;
+        padding:10px 12px;
+      }
+      .studio-sort-item.dragging{
+        opacity:.45;
+      }
+      .drag-handle{
+        font-size:18px;
+        color:var(--muted);
+        cursor:grab;
+        user-select:none;
+      }
+      .sort-copy strong{
+        display:block;
+        font-size:14px;
+      }
+      .sort-copy span{
+        display:block;
+        color:var(--muted);
+        font-size:12px;
+      }
+      .switch{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        margin:0;
+      }
+      .switch input{width:auto}
+      .switch span{
+        font-size:12px;
+        color:var(--muted);
+      }
+      .project-card{
+        border:1px solid var(--line);
+        border-radius:12px;
+        padding:12px;
+        background:var(--panel-2);
+      }
+      .project-heading{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        margin-bottom:8px;
+      }
+      .project-heading .slot{
+        font-size:12px;
+        color:var(--muted);
+        border:1px solid var(--line);
+        border-radius:999px;
+        padding:3px 8px;
+      }
+      .actions{
+        display:grid;
+        gap:8px;
+        grid-template-columns:repeat(4,minmax(0,1fr));
+      }
+      .preset-row{
+        display:grid;
+        gap:8px;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+      .preview-wrap{
+        position:sticky;
+        top:10px;
+        height:calc(100vh - 30px);
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+      }
+      .preview-frame{
+        width:100%;
+        height:100%;
+        border:1px solid var(--line);
+        border-radius:12px;
+        background:#000;
+      }
+      .hidden{display:none!important}
+      @media (max-width: 1220px){
+        .shell{
+          grid-template-columns:1fr;
+        }
+        .preview-wrap{
+          position:relative;
+          height:580px;
+          top:auto;
+        }
+      }
+      @media (max-width: 840px){
+        .grid-2,.grid-3,.actions,.preset-row{
+          grid-template-columns:1fr;
+        }
+      }
+    </style>
+    <script defer src="assets/js/site-settings.js?v=2"></script>
+    <script defer src="assets/js/studio.js?v=2"></script>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="title">
+          <h1>Studio Editor</h1>
+          <p class="subtitle">Advanced local editor with drag-and-drop layout controls.</p>
+        </div>
+        <div class="top-actions">
+          <button id="open-home" type="button">Open Home</button>
+          <button id="studio-logout" type="button">Lock</button>
+          <button id="clear-passphrase" type="button">Clear Passphrase</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <p id="studio-status" class="status" data-status="info"></p>
+        <span id="studio-unsaved" class="unsaved" data-unsaved="no">Saved</span>
+      </div>
+
+      <section id="setup-panel" class="panel hidden">
+        <h2>Set Passphrase</h2>
+        <p class="muted">Create your Studio passphrase for this browser.</p>
+        <form id="setup-form" class="stack">
+          <div>
+            <label for="setup-passphrase">Passphrase</label>
+            <input id="setup-passphrase" type="password" autocomplete="new-password" required />
+          </div>
+          <div>
+            <label for="setup-passphrase-confirm">Confirm Passphrase</label>
+            <input id="setup-passphrase-confirm" type="password" autocomplete="new-password" required />
+          </div>
+          <button type="submit">Create Passphrase</button>
+        </form>
+      </section>
+
+      <section id="login-panel" class="panel hidden">
+        <h2>Unlock Studio</h2>
+        <form id="login-form" class="stack">
+          <div>
+            <label for="login-passphrase">Passphrase</label>
+            <input id="login-passphrase" type="password" autocomplete="current-password" required />
+          </div>
+          <button type="submit">Unlock</button>
+        </form>
+      </section>
+
+      <section id="editor-panel" class="shell hidden">
+        <div class="stack">
+          <section class="panel">
+            <h2>Quick Presets</h2>
+            <p class="muted">Fast starting points before custom edits.</p>
+            <div class="preset-row">
+              <button id="preset-landing" type="button">Landing Only</button>
+              <button id="preset-portfolio" type="button">Portfolio Full</button>
+              <button id="preset-classic" type="button">Classic Works</button>
+            </div>
+          </section>
+
+          <section class="panel stack">
+            <h2>Global + Design</h2>
+            <div class="grid-2">
+              <div>
+                <label for="theme">Theme</label>
+                <select id="theme">
+                  <option value="LIGHT">Light</option>
+                  <option value="DARK">Dark</option>
+                </select>
+              </div>
+              <div>
+                <label for="card-radius">Card Radius</label>
+                <input id="card-radius" type="number" min="8" max="48" step="1" />
+              </div>
+              <div>
+                <label for="hero-frame-pad">Video Frame Padding</label>
+                <input id="hero-frame-pad" type="number" min="0" max="120" step="1" />
+              </div>
+              <div>
+                <label for="hero-header-height">Header Height</label>
+                <input id="hero-header-height" type="number" min="24" max="140" step="1" />
+              </div>
+              <div>
+                <label for="hero-tile-width">Intro Tile Width</label>
+                <input id="hero-tile-width" type="number" min="260" max="1200" step="1" />
+              </div>
+              <div>
+                <label for="hero-tile-height">Intro Tile Height</label>
+                <input id="hero-tile-height" type="number" min="120" max="600" step="1" />
+              </div>
+            </div>
+          </section>
+
+          <section class="panel stack">
+            <h2>Feature + Page Toggles</h2>
+            <div class="grid-2">
+              <div class="toggle"><span>Show Works Section</span><input id="toggle-works" type="checkbox" /></div>
+              <div class="toggle"><span>Use 3D Works Posters</span><input id="toggle-works-3d" type="checkbox" /></div>
+              <div class="toggle"><span>Projects Page</span><input id="toggle-projects" type="checkbox" /></div>
+              <div class="toggle"><span>About Page</span><input id="toggle-about" type="checkbox" /></div>
+              <div class="toggle"><span>Privacy Page</span><input id="toggle-privacy" type="checkbox" /></div>
+              <div class="toggle"><span>Aastry Page</span><input id="toggle-project-aastry" type="checkbox" /></div>
+              <div class="toggle"><span>Crimson Ring Page</span><input id="toggle-project-crimson-ring" type="checkbox" /></div>
+              <div class="toggle"><span>Super Syd Page</span><input id="toggle-project-super-syd" type="checkbox" /></div>
+            </div>
+          </section>
+
+          <section class="panel stack">
+            <h2>Layout Builder</h2>
+            <p class="muted">Drag sections to reorder. Toggle visibility per section.</p>
+            <ul id="section-sort-list" class="studio-sort-list"></ul>
+            <h3 style="margin-top:8px">Project Order</h3>
+            <p class="muted">Drag to reorder project cards across classic and 3D layouts.</p>
+            <ul id="project-order-list" class="studio-sort-list"></ul>
+          </section>
+
+          <section class="panel stack">
+            <h2>Text + Media</h2>
+            <div class="grid-2">
+              <div>
+                <label for="works-title">Works Title</label>
+                <input id="works-title" type="text" />
+              </div>
+              <div>
+                <label for="works-lede">Works Subtitle</label>
+                <input id="works-lede" type="text" />
+              </div>
+              <div>
+                <label for="coming-soon-copy">Coming Soon Text</label>
+                <input id="coming-soon-copy" type="text" />
+              </div>
+              <div>
+                <label for="teaser-url">Teaser YouTube URL</label>
+                <input id="teaser-url" type="text" />
+              </div>
+              <div>
+                <label for="previs-url">Previs YouTube URL</label>
+                <input id="previs-url" type="text" />
+              </div>
+            </div>
+          </section>
+
+          <section class="panel stack">
+            <h2>Project Cards</h2>
+            <article class="project-card">
+              <div class="project-heading">
+                <h3>Project 1</h3>
+                <span class="slot">Page Key: <strong id="project-1-page-key"></strong></span>
+              </div>
+              <div class="grid-2">
+                <div><label for="project-1-title">Title</label><input id="project-1-title" type="text" /></div>
+                <div><label for="project-1-meta">Meta</label><input id="project-1-meta" type="text" /></div>
+                <div><label for="project-1-poster">Poster Path or URL</label><input id="project-1-poster" type="text" /></div>
+                <div><label for="project-1-alt">Poster Alt</label><input id="project-1-alt" type="text" /></div>
+                <div><label for="project-1-link">Project Link</label><input id="project-1-link" type="text" /></div>
+              </div>
+              <label for="project-1-detail">3D Back Description</label>
+              <textarea id="project-1-detail"></textarea>
+            </article>
+
+            <article class="project-card">
+              <div class="project-heading">
+                <h3>Project 2</h3>
+                <span class="slot">Page Key: <strong id="project-2-page-key"></strong></span>
+              </div>
+              <div class="grid-2">
+                <div><label for="project-2-title">Title</label><input id="project-2-title" type="text" /></div>
+                <div><label for="project-2-meta">Meta</label><input id="project-2-meta" type="text" /></div>
+                <div><label for="project-2-poster">Poster Path or URL</label><input id="project-2-poster" type="text" /></div>
+                <div><label for="project-2-alt">Poster Alt</label><input id="project-2-alt" type="text" /></div>
+                <div><label for="project-2-link">Project Link</label><input id="project-2-link" type="text" /></div>
+              </div>
+              <label for="project-2-detail">3D Back Description</label>
+              <textarea id="project-2-detail"></textarea>
+            </article>
+
+            <article class="project-card">
+              <div class="project-heading">
+                <h3>Project 3</h3>
+                <span class="slot">Page Key: <strong id="project-3-page-key"></strong></span>
+              </div>
+              <div class="grid-2">
+                <div><label for="project-3-title">Title</label><input id="project-3-title" type="text" /></div>
+                <div><label for="project-3-meta">Meta</label><input id="project-3-meta" type="text" /></div>
+                <div><label for="project-3-poster">Poster Path or URL</label><input id="project-3-poster" type="text" /></div>
+                <div><label for="project-3-alt">Poster Alt</label><input id="project-3-alt" type="text" /></div>
+                <div><label for="project-3-link">Project Link</label><input id="project-3-link" type="text" /></div>
+              </div>
+              <label for="project-3-detail">3D Back Description</label>
+              <textarea id="project-3-detail"></textarea>
+            </article>
+          </section>
+
+          <section class="panel stack">
+            <h2>Save + Data</h2>
+            <div class="actions">
+              <button id="save-settings" type="button">Save Settings</button>
+              <button id="revert-settings" type="button">Revert</button>
+              <button id="reset-settings" type="button">Reset Defaults</button>
+              <button id="export-settings" type="button">Export JSON</button>
+            </div>
+            <div>
+              <label for="import-settings-file">Import JSON</label>
+              <input id="import-settings-file" type="file" accept=".json,application/json" />
+            </div>
+          </section>
+        </div>
+
+        <aside class="preview-wrap panel">
+          <div class="top-actions">
+            <button id="refresh-preview" type="button">Refresh Preview</button>
+          </div>
+          <iframe id="studio-preview" class="preview-frame" title="Homepage preview" src="index.html"></iframe>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>
