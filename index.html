@@ -6,21 +6,31 @@
         <meta name="referrer" content="strict-origin-when-cross-origin"/>
         <title>Julian Schnitt | Cinematography Reel</title>
         <meta name="description" content="Narrative and commercial cinematography by Julian Schnitt. Explore featured projects, case studies, and the Super Syd campaign."/>
-        <link rel="stylesheet" href="assets/css/styles.css?v=11"/>
+        <link rel="stylesheet" href="assets/css/styles.css?v=14"/>
         <link rel="dns-prefetch" href="//www.youtube-nocookie.com"/>
         <link rel="dns-prefetch" href="//www.youtube.com"/>
         <link rel="dns-prefetch" href="//i.ytimg.com"/>
         <link rel="preconnect" href="https://www.youtube-nocookie.com"/>
         <link rel="preconnect" href="https://www.youtube.com"/>
         <link rel="preconnect" href="https://i.ytimg.com"/>
-        <script defer src="assets/js/site-settings.js?v=2"></script>
+        <script defer src="assets/js/site-settings.js?v=5"></script>
         <script defer src="assets/js/landing-only.js?v=8"></script>
-        <script defer src="assets/js/opening-source.js?v=5"></script>
+        <script defer src="assets/js/opening-source.js?v=6"></script>
         <script defer src="assets/js/works-3d.js?v=3"></script>
-        <script defer src="assets/js/secret-entry.js?v=1"></script>
+        <script>
+            (function loadLocalStudioEntry() {
+                var host = window.location.hostname || "";
+                var isLocal = host === "localhost" || host === "127.0.0.1" || window.location.protocol === "file:";
+                if (!isLocal) return;
+                var script = document.createElement("script");
+                script.defer = true;
+                script.src = "assets/js/secret-entry.js?v=1";
+                document.head.appendChild(script);
+            })();
+        </script>
         <!-- GSAP (used for the opening effect) -->
         <script defer src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-        <script defer src="assets/js/opening.js?v=12"></script>
+        <script defer src="assets/js/opening.js?v=13"></script>
         <script defer src="assets/js/super-syd-cursor.js"></script>
     </head>
     <body class="scope-239">

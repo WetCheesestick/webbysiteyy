@@ -38,3 +38,25 @@ RUNNING LOCALLY
 OPENING SETTINGS
 - Edit assets/js/opening.js to adjust timing, easing, or disable “play once per session”.
 - Edit assets/css/styles.css to change the starting tile size (main-item), border radius, etc.
+
+PRODUCTION SAFETY (GITHUB PAGES)
+- This repo now deploys with GitHub Actions via `.github/workflows/deploy-pages.yml`.
+- The deploy artifact excludes local-only admin files:
+  - `studio-8391.html`
+  - `assets/js/secret-entry.js`
+  - `serve_with_cors.py`
+- `index.html` only loads `secret-entry.js` on `localhost`, `127.0.0.1`, or `file://`.
+
+GO LIVE CHECKLIST
+1) In GitHub repo settings: `Settings -> Pages -> Build and deployment -> Source = GitHub Actions`.
+2) Push to `main`; the workflow will publish only `_site` (sanitized production files).
+3) Use a custom domain in `Settings -> Pages` (or `CNAME`) and point DNS from Namecheap to GitHub Pages.
+
+SECURITY HEADERS
+- GitHub Pages does not let you set strict response headers directly.
+- For strict headers and access control, place Cloudflare in front of your domain and set:
+  - `Strict-Transport-Security`
+  - `Content-Security-Policy`
+  - `X-Frame-Options`
+  - `Referrer-Policy`
+  - `Permissions-Policy`
