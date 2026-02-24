@@ -3152,6 +3152,47 @@
     setStatus("Draft published to live settings.", "ok");
   }
 
+  async function publishDraftToFolder() {
+    const confirmed = window.confirm(
+      "Publish draft and write real settings files into this folder now?"
+    );
+    if (!confirmed) return;
+
+    saveDraftImmediately("Draft saved before folder publish.");
+    const published = api.publishDraft(state.draft);
+    state.published = clone(published);
+    state.draft = clone(published);
+    state.historyPast = [];
+    state.historyFuture = [];
+    renderAll();
+
+    try {
+      const response = await fetch("/__studio/publish", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ settings: published })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = await response.json().catch(() => ({}));
+      const files = Array.isArray(payload.files) && payload.files.length
+        ? payload.files.join(", ")
+        : "settings files";
+
+      setStatus(`Published to folder: ${files}. Commit and push to deploy.`, "ok");
+    } catch (_err) {
+      setStatus(
+        "Published in browser only. Start local server with: python3 serve_with_cors.py, then retry Publish to Folder.",
+        "warn"
+      );
+    }
+  }
+
   function discardDraft() {
     const confirmed = window.confirm("Discard draft and revert to currently published settings?");
     if (!confirmed) return;
@@ -3792,6 +3833,14 @@
       publishDraft();
       touchSession();
     });
+
+    const publishFolderBtn = byId("publish-folder");
+    if (publishFolderBtn) {
+      publishFolderBtn.addEventListener("click", async () => {
+        await publishDraftToFolder();
+        touchSession();
+      });
+    }
 
     byId("discard-draft").addEventListener("click", () => {
       discardDraft();

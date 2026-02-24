@@ -263,6 +263,17 @@
   const isOn = (value) => String(value || "").toUpperCase() === "ON";
   const normalizeOnOff = (value, fallback) => (String(value || fallback).toUpperCase() === "OFF" ? "OFF" : "ON");
 
+  function getBundledPublishedSettings() {
+    try {
+      if (typeof window === "undefined") return null;
+      const candidate = window.__STUDIO_PUBLISHED_SETTINGS__;
+      if (!isObject(candidate)) return null;
+      return normalizeSettings(candidate);
+    } catch (_err) {
+      return null;
+    }
+  }
+
   function normalizeText(value, fallback) {
     if (typeof value !== "string") return fallback;
     const trimmed = value.trim();
@@ -601,6 +612,9 @@
   function migrateLegacyIfNeeded() {
     const publishedRaw = safeReadStorage(STORAGE_KEYS.published);
     if (publishedRaw) return normalizeSettings(publishedRaw);
+
+    const bundled = getBundledPublishedSettings();
+    if (bundled) return normalizeSettings(bundled);
 
     const legacyRaw = safeReadStorage(STORAGE_KEYS.legacy);
     if (!legacyRaw) return clone(DEFAULT_SETTINGS);
