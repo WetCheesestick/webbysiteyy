@@ -1,7 +1,12 @@
 (() => {
   const OPENING_USE_YOUTUBE = "ON"; // ON = use YouTube, OFF = use local MP4 files.
+  const hero = document.querySelector(".main-item");
+  const introMode = String(hero?.getAttribute("data-intro-mode") || "original").toLowerCase();
 
-  const embeds = Array.from(document.querySelectorAll(".opening-yt[data-yt-id]"));
+  const embeds = Array.from(document.querySelectorAll(".opening-yt[data-yt-id]")).filter((embed) => {
+    const layer = embed.closest(".opening-item, .main-video");
+    return !(layer && layer.hidden);
+  });
   if (embeds.length === 0) return;
 
   const isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
@@ -78,7 +83,8 @@
         assignYoutubeSrc();
       } else {
         // Prioritize the first opening clip so the intro starts faster.
-        window.setTimeout(assignYoutubeSrc, 240 * index);
+        const staggerMs = introMode === "single" ? 120 : 240;
+        window.setTimeout(assignYoutubeSrc, staggerMs * index);
       }
     }
   });

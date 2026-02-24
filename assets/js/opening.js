@@ -21,9 +21,10 @@
   const header = document.querySelector(".site-header");
   const hero = document.querySelector(".main-item");
   const openingContainer = document.querySelector(".main-item .opening-container");
-  const openingLayers = Array.from(document.querySelectorAll(".main-item .opening-item"));
-  const stackedSweepLayers = Array.from(document.querySelectorAll(".main-item .opening-item.not-first"));
+  const openingLayers = Array.from(document.querySelectorAll(".main-item .opening-item")).filter((layer) => !layer.hidden);
+  const stackedSweepLayers = openingLayers.filter((layer) => layer.classList.contains("not-first"));
   const mainVideoLayer = document.querySelector(".main-item .main-video");
+  const introMode = String(hero?.getAttribute("data-intro-mode") || "original").toLowerCase();
 
   // Small helper: if elements with data-src exist, copy to src (useful if you later swap to real lazy-loading)
   function hydrateVideoSources() {
@@ -45,7 +46,12 @@
     return;
   }
 
+  const useSingleStyle =
+    introMode === "single" &&
+    mainVideoLayer &&
+    openingLayers.length >= 1;
   const useStackedStyle =
+    !useSingleStyle &&
     OPENING_ANIMATION_STYLE.toUpperCase() === "STACKED" &&
     mainVideoLayer &&
     stackedSweepLayers.length > 0;
@@ -96,6 +102,35 @@
     gsap.set(header, { opacity: 1 });
   }
 
+  function resetSingleStartState() {
+    hero.classList.remove("intro-expanded");
+    if (openingContainer) {
+      gsap.set(openingContainer, { autoAlpha: 1 });
+    }
+    gsap.set(hero, {
+      position: "relative",
+      top: "50%",
+      yPercent: -50,
+      width: "",
+      height: "",
+      borderRadius: 5
+    });
+    gsap.set(header, { opacity: 0 });
+    gsap.set(openingLayers, { yPercent: 0 });
+    gsap.set(mainVideoLayer, { y: 0 });
+  }
+
+  function jumpToSingleEndState() {
+    hero.classList.add("intro-expanded");
+    gsap.set(openingLayers, { yPercent: -100 });
+    gsap.set(mainVideoLayer, { y: "-100%" });
+    if (openingContainer) {
+      gsap.set(openingContainer, { autoAlpha: 0 });
+    }
+    gsap.set(hero, expandedState);
+    gsap.set(header, { opacity: 1 });
+  }
+
   function resetLegacyStartState() {
     hero.classList.remove("intro-expanded");
     if (openingContainer) {
@@ -115,7 +150,9 @@
     gsap.set(header, { opacity: 1 });
   }
 
-  if (useStackedStyle) {
+  if (useSingleStyle) {
+    resetSingleStartState();
+  } else if (useStackedStyle) {
     resetStackedStartState();
   } else {
     resetLegacyStartState();
@@ -123,7 +160,9 @@
 
   // If reduced motion, jump to the end state.
   if (reduced) {
-    if (useStackedStyle) {
+    if (useSingleStyle) {
+      jumpToSingleEndState();
+    } else if (useStackedStyle) {
       jumpToStackedEndState();
     } else {
       jumpToLegacyEndState();
@@ -151,7 +190,36 @@
     onComplete: endIntro
   });
 
-  if (useStackedStyle) {
+  if (useSingleStyle) {
+    const SINGLE_HOLD = 0.38;
+    const SINGLE_SWIPE_DURATION = 0.24;
+    const SINGLE_EXPAND_DURATION = 0.44;
+    const SINGLE_HEADER_FADE = 0.24;
+
+    tl.from(hero, {
+      opacity: 0,
+      duration: 0.24,
+      delay: 0.08
+    })
+      .to(mainVideoLayer, {
+        y: "-100%",
+        duration: SINGLE_SWIPE_DURATION
+      }, `+=${SINGLE_HOLD}`)
+      .to(openingLayers[0], {
+        yPercent: -100,
+        duration: SINGLE_SWIPE_DURATION
+      }, "<")
+      .add(() => {
+        if (openingContainer) {
+          gsap.set(openingContainer, { autoAlpha: 0 });
+        }
+      })
+      .to(hero, {
+        ...expandedState,
+        duration: SINGLE_EXPAND_DURATION
+      })
+      .fromTo(header, { opacity: 0 }, { opacity: 1, duration: SINGLE_HEADER_FADE, delay: 0.08 }, "<");
+  } else if (useStackedStyle) {
     tl.from(hero, {
       opacity: 0,
       duration: 0.5,
@@ -217,16 +285,18 @@
     ).fromTo(header, { opacity: 0 }, { opacity: 1, duration: HEADER_FADE_DURATION, delay: 0.08 }, "<");
   }
 
-  // Safety fallback: keep smooth motion but never stay stuck on opening_03.
+  // Safety fallback: keep smooth motion but never stay stuck mid-intro.
   const fallbackTimer = window.setTimeout(() => {
     if (!finished) {
       tl.kill();
-      if (useStackedStyle) {
+      if (useSingleStyle) {
+        jumpToSingleEndState();
+      } else if (useStackedStyle) {
         jumpToStackedEndState();
       } else {
         jumpToLegacyEndState();
       }
       endIntro();
     }
-  }, useStackedStyle ? 9000 : 4200);
+  }, useSingleStyle ? 4600 : useStackedStyle ? 9000 : 4200);
 })();
