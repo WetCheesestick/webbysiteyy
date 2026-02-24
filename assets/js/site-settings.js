@@ -183,7 +183,8 @@
         previsEmbedUrl: "https://www.youtube-nocookie.com/embed/D_Eh8zvQmb8?rel=0&playsinline=1&modestbranding=1"
       },
       opening: {
-        singleIntroEmbedUrl: "https://youtu.be/XJsnuIRlA9k"
+        singleIntroEmbedUrl: "https://youtu.be/XJsnuIRlA9k",
+        backgroundEmbedUrl: "https://youtu.be/zDLFZ_0GTLg"
       },
       projects: [
         {
@@ -539,6 +540,10 @@
           raw.content.opening.singleIntroEmbedUrl,
           out.content.opening.singleIntroEmbedUrl
         );
+        out.content.opening.backgroundEmbedUrl = normalizeText(
+          raw.content.opening.backgroundEmbedUrl,
+          out.content.opening.backgroundEmbedUrl
+        );
       }
 
       if (Array.isArray(raw.content.projects)) {
@@ -757,8 +762,10 @@
 
     const defaultOpeningIds = ["JaXuggpCLs8", "fsxOK0UAhko", "_HPmOGqlu_0"];
     const defaultSingleId = "XJsnuIRlA9k";
+    const defaultBackgroundId = "zDLFZ_0GTLg";
     const useSingleMode = isOn(settings.featureToggles.opening_single_intro_mode);
     const singleId = extractYoutubeVideoId(settings.content.opening.singleIntroEmbedUrl, defaultSingleId);
+    const backgroundId = extractYoutubeVideoId(settings.content.opening.backgroundEmbedUrl, defaultBackgroundId);
 
     hero.setAttribute("data-intro-mode", useSingleMode ? "single" : "original");
 
@@ -777,7 +784,11 @@
       setVisibility(item, !useSingleMode || index === 0);
     });
 
-    if (finalIframe) finalIframe.setAttribute("src", "");
+    if (finalIframe) {
+      finalIframe.setAttribute("data-yt-id", backgroundId || defaultBackgroundId);
+      finalIframe.setAttribute("title", "Background opening");
+      finalIframe.setAttribute("src", "");
+    }
   }
 
   function getOrderedProjects(settings) {

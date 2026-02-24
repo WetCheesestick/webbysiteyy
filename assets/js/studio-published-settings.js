@@ -88,11 +88,11 @@ window.__STUDIO_PUBLISHED_SETTINGS__ = {
         "textColor": "",
         "radius": 0,
         "align": "left",
-        "layoutMode": "free",
-        "freeX": 24,
-        "freeY": 2080,
-        "freeW": 1032,
-        "freeH": 488,
+        "layoutMode": "flow",
+        "freeX": 0,
+        "freeY": 0,
+        "freeW": 0,
+        "freeH": 0,
         "zIndex": 1
       }
     },
@@ -122,7 +122,8 @@ window.__STUDIO_PUBLISHED_SETTINGS__ = {
       "previsEmbedUrl": "https://www.youtube-nocookie.com/embed/D_Eh8zvQmb8?rel=0&playsinline=1&modestbranding=1"
     },
     "opening": {
-      "singleIntroEmbedUrl": "https://youtu.be/XJsnuIRlA9k"
+      "singleIntroEmbedUrl": "https://youtu.be/cpgGHw04M9Q",
+      "backgroundEmbedUrl": "https://youtu.be/CRJoRq4PTzo"
     },
     "projects": [
       {
@@ -181,6 +182,294 @@ window.__STUDIO_PUBLISHED_SETTINGS__ = {
       "type": "video",
       "label": "Background (YouTube)",
       "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
+    },
+    {
+      "id": "media-super-syd-poster",
+      "type": "image",
+      "label": "Super Syd Poster",
+      "url": "assets/images/super_syd_canva.png"
+    },
+    {
+      "id": "media-opening-1",
+      "type": "video",
+      "label": "Opening 1 (YouTube)",
+      "url": "https://youtu.be/JaXuggpCLs8"
+    },
+    {
+      "id": "media-opening-2",
+      "type": "video",
+      "label": "Opening 2 (YouTube)",
+      "url": "https://youtu.be/fsxOK0UAhko"
+    },
+    {
+      "id": "media-opening-3",
+      "type": "video",
+      "label": "Opening 3 (YouTube)",
+      "url": "https://youtu.be/_HPmOGqlu_0"
+    },
+    {
+      "id": "media-background",
+      "type": "video",
+      "label": "Background (YouTube)",
+      "url": "https://youtu.be/zDLFZ_0GTLg"
+    },
+    {
+      "id": "media-opening-single",
+      "type": "video",
+      "label": "Opening Single (YouTube)",
+      "url": "https://youtu.be/XJsnuIRlA9k"
     },
     {
       "id": "media-super-syd-poster",
