@@ -1,5 +1,8 @@
 (() => {
   const OPENING_USE_YOUTUBE = "ON"; // ON = use YouTube, OFF = use local MP4 files.
+  const YT_EMBED_HOST = "https://www.youtube.com"; // More reliable on strict browsers than nocookie for autoplay intro.
+  const REQUESTED_QUALITY = "hd1080"; // Best effort only; YouTube may still choose based on bandwidth/device.
+
   const hero = document.querySelector(".main-item");
   const introMode = String(hero?.getAttribute("data-intro-mode") || "original").toLowerCase();
 
@@ -18,7 +21,7 @@
   function primeOpeningThumbnail(embed, videoId) {
     const item = embed.closest(".opening-item, .main-video");
     if (!item || !videoId) return;
-    item.style.setProperty("--opening-thumb", `url("https://i.ytimg.com/vi/${videoId}/hqdefault.jpg")`);
+    item.style.setProperty("--opening-thumb", `url("https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg")`);
     item.classList.add("has-opening-thumb");
     embed.addEventListener(
       "load",
@@ -42,7 +45,9 @@
       rel: "0",
       playsinline: "1",
       iv_load_policy: "3",
-      cc_load_policy: "0"
+      cc_load_policy: "0",
+      enablejsapi: "1",
+      vq: REQUESTED_QUALITY
     });
 
     if (hasOrigin) {
@@ -50,7 +55,7 @@
       params.set("widget_referrer", `${window.location.origin}/`);
     }
 
-    return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+    return `${YT_EMBED_HOST}/embed/${videoId}?${params.toString()}`;
   }
 
   embeds.forEach((embed, index) => {
@@ -58,8 +63,7 @@
     const localSrc = embed.getAttribute("data-local-src");
     primeOpeningThumbnail(embed, videoId);
 
-    // Local file previews often trigger YouTube Error 153 (missing referrer).
-    // Also used when OPENING_USE_YOUTUBE is set to OFF.
+    // Local fallback if YouTube is unavailable in this context.
     if ((!useYoutube || !videoId) && localSrc) {
       const video = document.createElement("video");
       video.className = "vid";
@@ -74,17 +78,24 @@
     }
 
     if (useYoutube && videoId) {
+      const isFinal = Boolean(embed.closest(".main-video"));
+      const isPriority = index === 0 || isFinal;
+
       const assignYoutubeSrc = () => {
         embed.referrerPolicy = "strict-origin-when-cross-origin";
+        embed.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture; accelerometer; clipboard-write; gyroscope; web-share");
+        embed.setAttribute("allowfullscreen", "");
+        embed.setAttribute("loading", isPriority ? "eager" : "lazy");
+        embed.setAttribute("fetchpriority", isPriority ? "high" : "auto");
         embed.src = buildYoutubeSrc(videoId);
       };
 
-      if (index === 0) {
+      if (isPriority) {
         assignYoutubeSrc();
       } else {
-        // Prioritize the first opening clip so the intro starts faster.
-        const staggerMs = introMode === "single" ? 120 : 240;
-        window.setTimeout(assignYoutubeSrc, staggerMs * index);
+        // Keep visual sequence smooth while prioritizing first + final clips for presentation.
+        const staggerMs = introMode === "single" ? 90 : 180;
+        window.setTimeout(assignYoutubeSrc, staggerMs * Math.max(1, index - 1));
       }
     }
   });

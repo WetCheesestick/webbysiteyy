@@ -706,6 +706,12 @@
     }
 
     const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+    const hasOrigin = Boolean(
+      /^https?:$/.test(window.location.protocol) &&
+      window.location.origin &&
+      window.location.origin !== "null"
+    );
+
     let videoId = "";
 
     if (host === "youtu.be") {
@@ -717,7 +723,18 @@
     }
 
     if (videoId) {
-      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&playsinline=1&modestbranding=1`;
+      const params = new URLSearchParams({
+        rel: "0",
+        playsinline: "1",
+        modestbranding: "1",
+        vq: "hd1080",
+        enablejsapi: "1"
+      });
+      if (hasOrigin) {
+        params.set("origin", window.location.origin);
+        params.set("widget_referrer", `${window.location.origin}/`);
+      }
+      return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
     }
 
     if (value.includes("/embed/")) return value;
