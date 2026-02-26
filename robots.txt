@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /about.html
+Disallow: /privacy-policy.html
+Disallow: /project-aastry.html
+Disallow: /project-crimson-ring.html
+Disallow: /project-super-syd.html
+Disallow: /projects.html

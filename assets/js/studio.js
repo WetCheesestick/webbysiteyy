@@ -4317,6 +4317,18 @@
     return `Noindex pages: ${totalNoindex}.`;
   }
 
+  function summarizeRobots(payload) {
+    if (!payload || !Array.isArray(payload.robots)) return "";
+    const disallowed = payload.robots.filter((item) => item && item.disallow).length;
+    return `Robots disallow rules: ${disallowed}.`;
+  }
+
+  function summarizeSeoSync(payload) {
+    if (!payload || !Array.isArray(payload.seoSync)) return "";
+    const updated = payload.seoSync.filter((item) => item && item.updated).length;
+    return `SEO pages synced: ${updated}.`;
+  }
+
   function summarizeValidationIssues(validation) {
     if (!validation || typeof validation !== "object") return "";
     const errors = Array.isArray(validation.errors) ? validation.errors : [];
@@ -4411,14 +4423,19 @@
 
       const files = summarizePublishedFiles(payload);
       const noindexSummary = summarizeNoindex(payload);
+      const robotsSummary = summarizeRobots(payload);
+      const seoSyncSummary = summarizeSeoSync(payload);
 
       if (payload.git_pushed) {
         const commitRef =
           payload.commit && payload.branch ? `${payload.branch}@${payload.commit}` : payload.commit || "latest";
-        setStatus(`Live publish complete. Saved ${files}. ${noindexSummary} Git pushed (${commitRef}).`, "ok");
+        setStatus(
+          `Live publish complete. Saved ${files}. ${noindexSummary} ${robotsSummary} ${seoSyncSummary} Git pushed (${commitRef}).`,
+          "ok"
+        );
       } else {
         setStatus(
-          `Saved to folder (${files}). ${noindexSummary} Git push failed: ${payload.error || "check Git auth."}`,
+          `Saved to folder (${files}). ${noindexSummary} ${robotsSummary} ${seoSyncSummary} Git push failed: ${payload.error || "check Git auth."}`,
           "warn"
         );
       }
@@ -4466,7 +4483,9 @@
 
       const files = summarizePublishedFiles(payload);
       const noindexSummary = summarizeNoindex(payload);
-      setStatus(`Published to folder: ${files}. ${noindexSummary} Commit and push to deploy.`, "ok");
+      const robotsSummary = summarizeRobots(payload);
+      const seoSyncSummary = summarizeSeoSync(payload);
+      setStatus(`Published to folder: ${files}. ${noindexSummary} ${robotsSummary} ${seoSyncSummary} Commit and push to deploy.`, "ok");
     } catch (err) {
       appendPublishReport("Folder publish failed.", { error: String(err?.message || err || "") });
       setStatus(

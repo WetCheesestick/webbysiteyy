@@ -180,6 +180,30 @@ def test_media_alt_governance_used_vs_unused_images():
     assert "MEDIA_ALT_MISSING_UNUSED" in warning_codes
 
 
+def test_media_alt_validation_is_url_based_for_duplicates():
+    settings = base_settings()
+    settings["mediaLibrary"] = [
+        {
+            "id": "img-used-missing",
+            "type": "image",
+            "label": "Used image missing alt",
+            "url": "assets/images/used-poster.jpg",
+            "alt": "",
+        },
+        {
+            "id": "img-used-with-alt",
+            "type": "image",
+            "label": "Used image with alt",
+            "url": "assets/images/used-poster.jpg",
+            "alt": "Poster alt",
+        },
+    ]
+
+    result = studio_server.validate_settings_payload(settings)
+    error_codes = {entry["code"] for entry in result["errors"]}
+    assert "MEDIA_ALT_REQUIRED_USED_ASSET" not in error_codes
+
+
 def test_page_off_requires_noindex_configuration_warning():
     settings = base_settings()
     settings["pageToggles"]["projects"] = "OFF"

@@ -14,6 +14,12 @@ http://localhost:8000/studio-8391.html
 - `Publish Live`: writes locally and runs git pull/rebase/autostash + push.
 - `Rollback Published`: restores snapshot and pushes rollback commit.
 
+Startup precheck (run manually any time):
+```bash
+cd /Users/julianschnitt/Desktop/Julianschnitt.com
+test -f studio-8391.html && test -f assets/js/studio.js && test -f serve_with_cors.py && echo "Studio root OK"
+```
+
 ## One-command Git publish behavior
 `publish-site.sh` always:
 - uses `/Users/julianschnitt/Desktop/Julianschnitt.com` as source of truth
@@ -36,6 +42,8 @@ Contract fields:
 - `checks`
 - `files`
 - `noindex`
+- `robots`
+- `seoSync`
 - `publishingStatus`
 - `commit`
 - `branch`
@@ -48,6 +56,8 @@ Validation governance highlights:
 - Missing alt text is a warning for unused image assets.
 - Page toggle `OFF` expects `pages.<key>.seo.noindex = true`.
 - `designTokens.reducedMotion` must be `ON` or `OFF`.
+- Publish writes page SEO tags to HTML heads: `<title>`, managed description, managed canonical, and managed robots tags.
+- Publish writes `robots.txt` from page toggle + noindex policy (`Allow: /`, `Disallow` for non-indexable routes).
 
 ## Keyboard map
 Studio keyboard interactions:
@@ -94,3 +104,16 @@ Implemented regression coverage includes:
 cd /Users/julianschnitt/Desktop/Julianschnitt.com
 ```
 - If live publish fails, inspect `Publish Diagnostics` in Studio and retry after fixing git auth/rebase conflicts.
+
+## Search indexing cleanup runbook
+After publish, if old/unfinished URLs still appear in Google:
+1. Open Google Search Console for `https://julianschnitt.com/`.
+2. Go to `Indexing` -> `Removals` and submit temporary removals for unfinished paths:
+- `/projects.html`
+- `/about.html`
+- `/privacy-policy.html`
+- `/project-aastry.html`
+- `/project-crimson-ring.html`
+- `/project-super-syd.html`
+3. In `URL Inspection`, inspect and request indexing for `https://julianschnitt.com/`.
+4. Re-check coverage after recrawl; noindex/robots changes are not instant.

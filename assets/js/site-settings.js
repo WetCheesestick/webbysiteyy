@@ -628,18 +628,83 @@
     const label = normalizeText(source.label, `Media ${index + 1}`);
     const id = slugify(source.id || `${normalizedType}-${label}-${index + 1}`) || uid("media");
     const legacyAlt = normalizeFreeText(source.alt, normalizeFreeText(source.description, ""));
+    const normalizedAlt = normalizedType === "image"
+      ? (normalizeFreeText(legacyAlt, "") || normalizeFreeText(source.label, ""))
+      : "";
     return {
       id,
       type: normalizedType,
       label,
       url: normalizeFreeText(source.url, ""),
-      alt: normalizedType === "image" ? normalizeFreeText(legacyAlt, "") : "",
+      alt: normalizedAlt,
       favorite: Boolean(source.favorite),
       createdAtUtc: normalizeFreeText(source.createdAtUtc, ""),
       updatedAtUtc: normalizeFreeText(source.updatedAtUtc, ""),
       lastUsedAtUtc: normalizeFreeText(source.lastUsedAtUtc, ""),
       usageCount: normalizeCount(source.usageCount, 0)
     };
+  }
+
+  function pickLatestUtc(a, b) {
+    const aValue = normalizeFreeText(a, "");
+    const bValue = normalizeFreeText(b, "");
+    if (!aValue) return bValue;
+    if (!bValue) return aValue;
+    const aTs = Date.parse(aValue);
+    const bTs = Date.parse(bValue);
+    if (!Number.isFinite(aTs)) return bValue;
+    if (!Number.isFinite(bTs)) return aValue;
+    return bTs > aTs ? bValue : aValue;
+  }
+
+  function pickEarliestUtc(a, b) {
+    const aValue = normalizeFreeText(a, "");
+    const bValue = normalizeFreeText(b, "");
+    if (!aValue) return bValue;
+    if (!bValue) return aValue;
+    const aTs = Date.parse(aValue);
+    const bTs = Date.parse(bValue);
+    if (!Number.isFinite(aTs)) return bValue;
+    if (!Number.isFinite(bTs)) return aValue;
+    return bTs < aTs ? bValue : aValue;
+  }
+
+  function mergeMediaItems(baseItem, nextItem) {
+    const base = normalizeMediaItem(baseItem, 0);
+    const next = normalizeMediaItem(nextItem, 0);
+    const merged = {
+      ...base,
+      label: base.label || next.label,
+      url: base.url || next.url,
+      favorite: Boolean(base.favorite || next.favorite),
+      usageCount: Math.max(normalizeCount(base.usageCount, 0), normalizeCount(next.usageCount, 0)),
+      createdAtUtc: pickEarliestUtc(base.createdAtUtc, next.createdAtUtc),
+      updatedAtUtc: pickLatestUtc(base.updatedAtUtc, next.updatedAtUtc),
+      lastUsedAtUtc: pickLatestUtc(base.lastUsedAtUtc, next.lastUsedAtUtc)
+    };
+    if (merged.type === "image") {
+      merged.alt = normalizeFreeText(base.alt, "") || normalizeFreeText(next.alt, "") || normalizeFreeText(merged.label, "");
+    }
+    return normalizeMediaItem(merged, 0);
+  }
+
+  function dedupeMediaLibrary(items) {
+    const byId = new Map();
+    (Array.isArray(items) ? items : []).forEach((item, index) => {
+      const normalized = normalizeMediaItem(item, index);
+      const existing = byId.get(normalized.id);
+      byId.set(normalized.id, existing ? mergeMediaItems(existing, normalized) : normalized);
+    });
+
+    const byAsset = new Map();
+    Array.from(byId.values()).forEach((item) => {
+      const url = normalizeFreeText(item.url, "");
+      const key = url ? `${item.type}:${url}`.toLowerCase() : `id:${item.id}`;
+      const existing = byAsset.get(key);
+      byAsset.set(key, existing ? mergeMediaItems(existing, item) : item);
+    });
+
+    return Array.from(byAsset.values()).map((item, index) => normalizeMediaItem(item, index));
   }
 
   function normalizeLibraryState(rawLibrary, fallbackLibrary) {
@@ -901,17 +966,21 @@
     }
 
     if (Array.isArray(raw.mediaLibrary)) {
-      out.mediaLibrary = raw.mediaLibrary.map((item, index) => normalizeMediaItem(item, index));
+      out.mediaLibrary = dedupeMediaLibrary(raw.mediaLibrary);
+    } else {
+      out.mediaLibrary = dedupeMediaLibrary(out.mediaLibrary);
     }
 
     out.library = normalizeLibraryState(raw.library, out.library);
 
     const mediaIds = new Set(out.mediaLibrary.map((item) => item.id));
     DEFAULT_SETTINGS.mediaLibrary.forEach((item, index) => {
-      if (mediaIds.has(item.id)) return;
-      out.mediaLibrary.push(normalizeMediaItem(item, out.mediaLibrary.length + index));
-      mediaIds.add(item.id);
+      const normalizedDefault = normalizeMediaItem(item, out.mediaLibrary.length + index);
+      if (mediaIds.has(normalizedDefault.id)) return;
+      out.mediaLibrary.push(normalizedDefault);
+      mediaIds.add(normalizedDefault.id);
     });
+    out.mediaLibrary = dedupeMediaLibrary(out.mediaLibrary);
 
     return out;
   }
@@ -959,12 +1028,18 @@
 
   function loadPublishedSettings() {
     const published = migrateLegacyIfNeeded();
-    return normalizeSettings(published);
+    const normalized = normalizeSettings(published);
+    safeWriteStorage(STORAGE_KEYS.published, normalized);
+    return normalized;
   }
 
   function loadDraftSettings() {
     const draftRaw = safeReadStorage(STORAGE_KEYS.draft);
-    if (draftRaw) return normalizeSettings(draftRaw);
+    if (draftRaw) {
+      const normalized = normalizeSettings(draftRaw);
+      safeWriteStorage(STORAGE_KEYS.draft, normalized);
+      return normalized;
+    }
     return clone(loadPublishedSettings());
   }
 

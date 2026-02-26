@@ -618,28 +618,42 @@ def validate_settings_payload(settings):
     missing_alt_used = 0
     missing_alt_unused = 0
     used_images = 0
-
+    image_entries_by_url = {}
     for index, item in enumerate(media_items):
         if not isinstance(item, dict):
             continue
-        item_type = str(item.get("type", "")).lower()
-        if item_type != "image":
+        if str(item.get("type", "")).lower() != "image":
             continue
-
         item_url = normalize_media_url(item.get("url"))
-        used = bool(item_url) and item_url in active_image_urls
+        if not item_url:
+            continue
+        alt_value = str(item.get("alt", "") or item.get("description", "") or "").strip()
+        existing = image_entries_by_url.get(item_url)
+        if not existing:
+            image_entries_by_url[item_url] = {
+                "index": index,
+                "id": item.get("id"),
+                "label": item.get("label"),
+                "has_alt": bool(alt_value),
+                "count": 1,
+            }
+            continue
+        existing["has_alt"] = bool(existing["has_alt"] or alt_value)
+        existing["count"] = int(existing.get("count", 1)) + 1
+
+    for item_url, info in image_entries_by_url.items():
+        used = item_url in active_image_urls
         if used:
             used_images += 1
-
-        alt_value = str(item.get("alt", "") or item.get("description", "") or "").strip()
-        if alt_value:
+        if info.get("has_alt"):
             continue
 
         issue_meta = {
-            "id": item.get("id"),
-            "label": item.get("label"),
+            "id": info.get("id"),
+            "label": info.get("label"),
             "url": item_url,
             "used": used,
+            "duplicates": info.get("count", 1),
         }
 
         if used:
@@ -648,7 +662,7 @@ def validate_settings_payload(settings):
                 errors,
                 "MEDIA_ALT_REQUIRED_USED_ASSET",
                 "Image asset used by live sections/projects must include alt text.",
-                f"mediaLibrary[{index}]",
+                f"mediaLibrary[{int(info.get('index', 0))}]",
                 issue_meta,
             )
         else:
@@ -657,7 +671,7 @@ def validate_settings_payload(settings):
                 warnings,
                 "MEDIA_ALT_MISSING_UNUSED",
                 "Unused image asset is missing alt text.",
-                f"mediaLibrary[{index}]",
+                f"mediaLibrary[{int(info.get('index', 0))}]",
                 issue_meta,
             )
 
