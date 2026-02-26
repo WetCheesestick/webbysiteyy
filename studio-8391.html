@@ -792,7 +792,9 @@
       .modal-card {
         width: min(920px, 100%);
         max-height: min(84vh, 920px);
-        overflow: auto;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
         border: 1px solid var(--line);
         background: var(--panel);
         border-radius: 14px;
@@ -808,6 +810,8 @@
 
       .modal-body {
         padding: 12px;
+        min-height: 0;
+        overflow: auto;
       }
 
       .template-grid,
@@ -827,6 +831,7 @@
         display: grid;
         grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
         gap: 12px;
+        align-items: start;
         min-height: min(56vh, 640px);
       }
 
@@ -841,6 +846,8 @@
         overflow: auto;
         align-content: start;
         padding-right: 2px;
+        min-height: 0;
+        max-height: min(60vh, 620px);
       }
 
       .library-preview-pane {
@@ -852,6 +859,10 @@
         grid-template-rows: auto auto minmax(0, 1fr) auto;
         gap: 8px;
         min-height: 0;
+        position: sticky;
+        top: 0;
+        max-height: min(66vh, 660px);
+        overflow: auto;
       }
 
       .library-preview-pane h4 {
@@ -1061,6 +1072,17 @@
 
         .library-layout {
           grid-template-columns: 1fr;
+        }
+
+        .library-preview-pane {
+          position: static;
+          top: auto;
+          max-height: none;
+          overflow: visible;
+        }
+
+        .library-list-wrap .template-grid {
+          max-height: min(44vh, 420px);
         }
       }
     </style>
@@ -1370,7 +1392,7 @@
           <h3 id="template-modal-title" style="margin:0">Add Section Template</h3>
           <button id="close-template-modal" type="button">Close</button>
         </div>
-        <div class="modal-body stack">
+        <div id="template-modal-body" class="modal-body stack">
           <div class="grid-2">
             <div>
               <label class="label" for="library-search-input">Search Library</label>
@@ -1394,11 +1416,11 @@
             <button id="library-mode-assets" type="button" data-library-mode="assets">Style Assets</button>
           </div>
           <div class="library-layout">
-            <div class="library-list-wrap">
+            <div id="library-list-wrap" class="library-list-wrap">
               <p id="library-stats" class="muted" style="margin:0">Loading library...</p>
               <ul id="template-list" class="template-grid"></ul>
             </div>
-            <aside class="library-preview-pane">
+            <aside id="library-preview-pane" class="library-preview-pane">
               <h4 id="library-preview-title">Library Preview</h4>
               <p id="library-preview-subtitle" class="muted" style="margin:0">Select or hover an item to preview.</p>
               <div id="library-preview-canvas" class="library-preview-canvas"></div>

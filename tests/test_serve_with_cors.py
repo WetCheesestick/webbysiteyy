@@ -125,6 +125,8 @@ def test_validation_response_contract_fields():
         "checks",
         "files",
         "noindex",
+        "robots",
+        "seoSync",
         "publishingStatus",
         "commit",
         "branch",
@@ -217,6 +219,69 @@ def test_sync_noindex_pages_inserts_and_removes_tag(tmp_path, monkeypatch):
     on_result = studio_server.sync_noindex_pages({"pageToggles": {"index": "ON"}})
     assert on_result[0]["noindex"] is False
     assert 'data-studio-robots="1"' not in html_file.read_text(encoding="utf-8")
+
+
+def test_sync_page_seo_meta_writes_title_description_and_canonical(tmp_path, monkeypatch):
+    html_file = tmp_path / "index.html"
+    html_file.write_text(
+        "<html><head><title>Old</title></head><body>ok</body></html>",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(studio_server, "ROOT_DIR", tmp_path)
+    monkeypatch.setattr(studio_server, "PAGE_NOINDEX_FILES", {"index": "index.html"})
+
+    settings = {
+        "pageToggles": {"index": "ON"},
+        "pages": {
+            "index": {
+                "seo": {
+                    "title": "New Home Title",
+                    "description": "Fresh home description.",
+                    "canonical": "https://julianschnitt.com/",
+                    "noindex": False,
+                }
+            }
+        },
+    }
+
+    result = studio_server.sync_page_seo_meta(settings)
+    updated_html = html_file.read_text(encoding="utf-8")
+    assert "<title>New Home Title</title>" in updated_html
+    assert 'data-studio-description="1"' in updated_html
+    assert 'data-studio-canonical="1"' in updated_html
+    assert result["seoSync"][0]["ok"] is True
+    assert result["seoSync"][0]["updated"] is True
+
+
+def test_sync_robots_txt_reflects_off_pages(tmp_path, monkeypatch):
+    monkeypatch.setattr(studio_server, "ROOT_DIR", tmp_path)
+    monkeypatch.setattr(
+        studio_server,
+        "PAGE_NOINDEX_FILES",
+        {
+            "index": "index.html",
+            "projects": "projects.html",
+        },
+    )
+
+    settings = {
+        "pageToggles": {"index": "ON", "projects": "OFF"},
+        "pages": {
+            "index": {"seo": {"noindex": False}},
+            "projects": {"seo": {"noindex": True}},
+        },
+    }
+
+    result = studio_server.sync_robots_txt(settings)
+    robots_body = (tmp_path / "robots.txt").read_text(encoding="utf-8")
+    assert "User-agent: *" in robots_body
+    assert "Allow: /" in robots_body
+    assert "Disallow: /projects.html" in robots_body
+    assert result["updated"] is True
+    projects_rule = [item for item in result["rules"] if item["pageKey"] == "projects"]
+    assert projects_rule
+    assert projects_rule[0]["disallow"] is True
 
 
 def test_run_publish_live_returns_commit_branch_and_status(monkeypatch, tmp_path):

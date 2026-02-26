@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import html
 import json
 import os
 import re
@@ -15,6 +16,8 @@ PUBLISHED_SETTINGS_JSON = ROOT_DIR / "assets" / "js" / "studio-published-setting
 PUBLISHED_SNAPSHOT_JSON = ROOT_DIR / "assets" / "js" / "studio-published-settings.snapshot.json"
 PUBLISH_SCRIPT = ROOT_DIR / "scripts" / "publish-site.sh"
 MANAGED_ROBOTS_TAG = '<meta name="robots" content="noindex,nofollow,noarchive" data-studio-robots="1" />'
+MANAGED_DESCRIPTION_TAG = '<meta name="description" content="{content}" data-studio-description="1" />'
+MANAGED_CANONICAL_TAG = '<link rel="canonical" href="{href}" data-studio-canonical="1" />'
 PAGE_NOINDEX_FILES = {
     "index": "index.html",
     "projects": "projects.html",
@@ -75,6 +78,8 @@ def make_contract_base():
         "checks": make_checks_payload(),
         "files": [],
         "noindex": [],
+        "robots": [],
+        "seoSync": [],
         "publishingStatus": "idle",
         "commit": "",
         "branch": "",
@@ -201,6 +206,34 @@ def build_noindex_expectations(settings):
             }
         )
 
+    return entries
+
+
+def build_robots_expectations(settings):
+    page_toggles = settings.get("pageToggles") if isinstance(settings, dict) else {}
+    page_toggles = page_toggles if isinstance(page_toggles, dict) else {}
+    pages = settings.get("pages") if isinstance(settings, dict) else {}
+    pages = pages if isinstance(pages, dict) else {}
+
+    entries = []
+    for page_key, relative_path in PAGE_NOINDEX_FILES.items():
+        enabled = is_on(page_toggles.get(page_key, "ON"))
+        page_cfg = pages.get(page_key)
+        page_cfg = page_cfg if isinstance(page_cfg, dict) else {}
+        seo_cfg = page_cfg.get("seo")
+        seo_cfg = seo_cfg if isinstance(seo_cfg, dict) else {}
+        configured_noindex = normalize_noindex_bool(seo_cfg.get("noindex"), fallback=not enabled)
+        should_noindex = (not enabled) or configured_noindex
+        route = "/" if relative_path == "index.html" else f"/{relative_path}"
+        entries.append(
+            {
+                "pageKey": page_key,
+                "route": route,
+                "enabled": enabled,
+                "disallow": should_noindex,
+                "ok": True,
+            }
+        )
     return entries
 
 
@@ -403,11 +436,15 @@ def validate_settings_payload(settings):
         response["errors"] = errors
         response["checks"] = checks
         response["noindex"] = []
+        response["robots"] = []
+        response["seoSync"] = []
         response["output"] = "Validation failed."
         return response
 
     noindex_expectations = build_noindex_expectations(settings)
     response["noindex"] = noindex_expectations
+    response["robots"] = build_robots_expectations(settings)
+    response["seoSync"] = []
 
     schema_version = settings.get("schemaVersion", 0)
     try:
@@ -784,18 +821,28 @@ def upsert_page_robots_tag(file_path, should_noindex):
 def sync_noindex_pages(settings):
     page_toggles = settings.get("pageToggles") if isinstance(settings, dict) else {}
     page_toggles = page_toggles if isinstance(page_toggles, dict) else {}
+    pages = settings.get("pages") if isinstance(settings, dict) else {}
+    pages = pages if isinstance(pages, dict) else {}
 
     results = []
     for page_key, relative_path in PAGE_NOINDEX_FILES.items():
         target_file = ROOT_DIR / relative_path
         if not target_file.exists():
+            enabled = is_on(page_toggles.get(page_key, "ON"))
+            page_cfg = pages.get(page_key)
+            page_cfg = page_cfg if isinstance(page_cfg, dict) else {}
+            seo_cfg = page_cfg.get("seo")
+            seo_cfg = seo_cfg if isinstance(seo_cfg, dict) else {}
+            configured_noindex = normalize_noindex_bool(seo_cfg.get("noindex"), fallback=not enabled)
+            should_noindex = (not enabled) or configured_noindex
             results.append(
                 {
                     "pageKey": page_key,
                     "file": relative_path,
                     "exists": False,
-                    "enabled": is_on(page_toggles.get(page_key, "ON")),
-                    "noindex": False,
+                    "enabled": enabled,
+                    "configuredNoindex": configured_noindex,
+                    "noindex": should_noindex,
                     "updated": False,
                     "ok": False,
                 }
@@ -803,7 +850,12 @@ def sync_noindex_pages(settings):
             continue
 
         enabled = is_on(page_toggles.get(page_key, "ON"))
-        should_noindex = not enabled
+        page_cfg = pages.get(page_key)
+        page_cfg = page_cfg if isinstance(page_cfg, dict) else {}
+        seo_cfg = page_cfg.get("seo")
+        seo_cfg = seo_cfg if isinstance(seo_cfg, dict) else {}
+        configured_noindex = normalize_noindex_bool(seo_cfg.get("noindex"), fallback=not enabled)
+        should_noindex = (not enabled) or configured_noindex
         updated = upsert_page_robots_tag(target_file, should_noindex)
         results.append(
             {
@@ -811,12 +863,183 @@ def sync_noindex_pages(settings):
                 "file": relative_path,
                 "exists": True,
                 "enabled": enabled,
+                "configuredNoindex": configured_noindex,
                 "noindex": should_noindex,
                 "updated": updated,
                 "ok": True,
             }
         )
     return results
+
+
+def upsert_page_seo_tags(file_path, title="", description="", canonical=""):
+    source = file_path.read_text(encoding="utf-8")
+    match = re.search(r"(<head\b[^>]*>)(.*?)(</head>)", source, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        raise ValueError(f"Could not locate <head> in {file_path.name}")
+
+    head_inner = match.group(2)
+    original_inner = head_inner
+
+    # Keep publish output deterministic by replacing prior SEO tags.
+    head_inner = re.sub(r"\s*<meta[^>]*data-studio-description=[\"']1[\"'][^>]*>\s*", "\n", head_inner, flags=re.IGNORECASE)
+    head_inner = re.sub(r"\s*<meta[^>]*name=[\"']description[\"'][^>]*>\s*", "\n", head_inner, flags=re.IGNORECASE)
+    head_inner = re.sub(r"\s*<link[^>]*data-studio-canonical=[\"']1[\"'][^>]*>\s*", "\n", head_inner, flags=re.IGNORECASE)
+    head_inner = re.sub(r"\s*<link[^>]*rel=[\"']canonical[\"'][^>]*>\s*", "\n", head_inner, flags=re.IGNORECASE)
+
+    title_text = str(title or "").strip()
+    if title_text:
+        escaped_title = html.escape(title_text)
+        replacement = f"\n    <title>{escaped_title}</title>\n"
+        if re.search(r"<title\b[^>]*>.*?</title>", head_inner, flags=re.IGNORECASE | re.DOTALL):
+            head_inner = re.sub(
+                r"<title\b[^>]*>.*?</title>",
+                replacement.strip(),
+                head_inner,
+                count=1,
+                flags=re.IGNORECASE | re.DOTALL,
+            )
+        else:
+            head_inner = replacement + head_inner
+
+    managed_tags = []
+    description_text = str(description or "").strip()
+    if description_text:
+        managed_tags.append(
+            MANAGED_DESCRIPTION_TAG.format(content=html.escape(description_text, quote=True))
+        )
+
+    canonical_url = str(canonical or "").strip()
+    if canonical_url:
+        managed_tags.append(
+            MANAGED_CANONICAL_TAG.format(href=html.escape(canonical_url, quote=True))
+        )
+
+    if managed_tags:
+        managed_block = "\n" + "\n".join(f"    {tag}" for tag in managed_tags) + "\n"
+        title_match = re.search(r"<title\b[^>]*>.*?</title>", head_inner, flags=re.IGNORECASE | re.DOTALL)
+        if title_match:
+            insert_at = title_match.end()
+            head_inner = f"{head_inner[:insert_at]}{managed_block}{head_inner[insert_at:]}"
+        else:
+            head_inner = managed_block + head_inner
+
+    if head_inner != original_inner:
+        source = f"{source[:match.start(2)]}{head_inner}{source[match.end(2):]}"
+        file_path.write_text(source, encoding="utf-8")
+        return True
+    return False
+
+
+def sync_page_seo_meta(settings):
+    page_toggles = settings.get("pageToggles") if isinstance(settings, dict) else {}
+    page_toggles = page_toggles if isinstance(page_toggles, dict) else {}
+    pages = settings.get("pages") if isinstance(settings, dict) else {}
+    pages = pages if isinstance(pages, dict) else {}
+
+    noindex_updates = sync_noindex_pages(settings)
+    noindex_by_key = {
+        str(item.get("pageKey")): item for item in noindex_updates if isinstance(item, dict)
+    }
+
+    files = set()
+    seo_results = []
+    for page_key, relative_path in PAGE_NOINDEX_FILES.items():
+        target_file = ROOT_DIR / relative_path
+        noindex_info = noindex_by_key.get(page_key, {})
+        enabled = is_on(page_toggles.get(page_key, "ON"))
+        page_cfg = pages.get(page_key)
+        page_cfg = page_cfg if isinstance(page_cfg, dict) else {}
+        seo_cfg = page_cfg.get("seo")
+        seo_cfg = seo_cfg if isinstance(seo_cfg, dict) else {}
+
+        title = str(seo_cfg.get("title") or "").strip()
+        description = str(seo_cfg.get("description") or "").strip()
+        canonical = str(seo_cfg.get("canonical") or "").strip()
+
+        exists = target_file.exists()
+        meta_updated = False
+        if exists:
+            meta_updated = upsert_page_seo_tags(
+                target_file,
+                title=title,
+                description=description,
+                canonical=canonical,
+            )
+
+        robots_updated = bool(noindex_info.get("updated"))
+        if exists and (meta_updated or robots_updated):
+            files.add(relative_path)
+
+        seo_results.append(
+            {
+                "pageKey": page_key,
+                "file": relative_path,
+                "exists": exists,
+                "enabled": enabled,
+                "title": title,
+                "description": description,
+                "canonical": canonical,
+                "noindex": bool(noindex_info.get("noindex")),
+                "metaUpdated": meta_updated,
+                "robotsUpdated": robots_updated,
+                "updated": meta_updated or robots_updated,
+                "ok": exists,
+            }
+        )
+
+    return {
+        "noindex": noindex_updates,
+        "seoSync": seo_results,
+        "files": sorted(files),
+    }
+
+
+def sync_robots_txt(settings):
+    page_toggles = settings.get("pageToggles") if isinstance(settings, dict) else {}
+    page_toggles = page_toggles if isinstance(page_toggles, dict) else {}
+    pages = settings.get("pages") if isinstance(settings, dict) else {}
+    pages = pages if isinstance(pages, dict) else {}
+
+    disallow_routes = []
+    rules = []
+    for page_key, relative_path in PAGE_NOINDEX_FILES.items():
+        enabled = is_on(page_toggles.get(page_key, "ON"))
+        page_cfg = pages.get(page_key)
+        page_cfg = page_cfg if isinstance(page_cfg, dict) else {}
+        seo_cfg = page_cfg.get("seo")
+        seo_cfg = seo_cfg if isinstance(seo_cfg, dict) else {}
+        configured_noindex = normalize_noindex_bool(seo_cfg.get("noindex"), fallback=not enabled)
+        disallow = (not enabled) or configured_noindex
+        route = "/" if relative_path == "index.html" else f"/{relative_path}"
+        if disallow:
+            disallow_routes.append(route)
+        rules.append(
+            {
+                "pageKey": page_key,
+                "route": route,
+                "enabled": enabled,
+                "disallow": disallow,
+                "ok": True,
+            }
+        )
+
+    lines = ["User-agent: *", "Allow: /"]
+    for route in sorted(set(disallow_routes)):
+        lines.append(f"Disallow: {route}")
+    robots_body = "\n".join(lines) + "\n"
+
+    robots_path = ROOT_DIR / "robots.txt"
+    previous = robots_path.read_text(encoding="utf-8") if robots_path.exists() else ""
+    updated = previous != robots_body
+    if updated:
+        robots_path.write_text(robots_body, encoding="utf-8")
+
+    return {
+        "file": "robots.txt",
+        "updated": updated,
+        "rules": rules,
+    }
 
 
 def read_git(command):
@@ -890,6 +1113,8 @@ def merge_validation_into_response(base_response, validation):
     response["warnings"] = validation.get("warnings", []) if isinstance(validation.get("warnings"), list) else []
     response["checks"] = validation.get("checks", make_checks_payload())
     response["noindex"] = validation.get("noindex", []) if isinstance(validation.get("noindex"), list) else []
+    response["robots"] = validation.get("robots", []) if isinstance(validation.get("robots"), list) else []
+    response["seoSync"] = validation.get("seoSync", []) if isinstance(validation.get("seoSync"), list) else []
     response["errors"] = validation.get("errors", []) if isinstance(validation.get("errors"), list) else []
     return response
 
@@ -925,10 +1150,19 @@ def rollback_published_snapshot(commit_message=None):
 
     backup_current_published_settings()
     files = write_published_settings(apply_publish_defaults(snapshot))
-    noindex_updates = sync_noindex_pages(snapshot)
+    seo_sync = sync_page_seo_meta(snapshot)
+    robots_sync = sync_robots_txt(snapshot)
 
-    response["files"] = files
-    response["noindex"] = noindex_updates
+    response["files"] = sorted(
+        set(
+            files
+            + seo_sync.get("files", [])
+            + ([robots_sync.get("file")] if robots_sync.get("updated") else [])
+        )
+    )
+    response["noindex"] = seo_sync.get("noindex", [])
+    response["seoSync"] = seo_sync.get("seoSync", [])
+    response["robots"] = robots_sync.get("rules", [])
 
     publish_result = run_publish_live(sanitize_commit_message(commit_message or "Studio rollback published snapshot"))
     response["git_pushed"] = publish_result.get("git_pushed", False)
@@ -1013,11 +1247,20 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
             normalized_settings = apply_publish_defaults(settings)
             backup_current_published_settings()
             files = write_published_settings(normalized_settings)
-            noindex_updates = sync_noindex_pages(normalized_settings)
+            seo_sync = sync_page_seo_meta(normalized_settings)
+            robots_sync = sync_robots_txt(normalized_settings)
 
             response["ok"] = True
-            response["files"] = files
-            response["noindex"] = noindex_updates
+            response["files"] = sorted(
+                set(
+                    files
+                    + seo_sync.get("files", [])
+                    + ([robots_sync.get("file")] if robots_sync.get("updated") else [])
+                )
+            )
+            response["noindex"] = seo_sync.get("noindex", [])
+            response["seoSync"] = seo_sync.get("seoSync", [])
+            response["robots"] = robots_sync.get("rules", [])
             response["publishingStatus"] = "saved_local"
             response["output"] = "Settings published to folder."
             response["git_pushed"] = False

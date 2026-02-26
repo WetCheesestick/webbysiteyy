@@ -924,7 +924,10 @@
     seoNoindexPreview: byId("seo-noindex-preview"),
 
     templateModal: byId("template-modal"),
+    templateModalBody: byId("template-modal-body"),
     templateList: byId("template-list"),
+    libraryListWrap: byId("library-list-wrap"),
+    libraryPreviewPane: byId("library-preview-pane"),
     libraryStats: byId("library-stats"),
     libraryPreviewTitle: byId("library-preview-title"),
     libraryPreviewSubtitle: byId("library-preview-subtitle"),
@@ -2211,6 +2214,19 @@
 
     renderLibraryControls();
     renderTemplateList();
+    if (refs.libraryPreviewPane) refs.libraryPreviewPane.scrollTop = 0;
+  }
+
+  function prepareLibraryModalForOpen() {
+    const entries = getLibraryEntries();
+    if (!entries.some((entry) => entry.id === state.libraryPreviewId)) {
+      state.libraryPreviewId = entries[0] ? entries[0].id : null;
+      renderLibraryPreview();
+    }
+    if (refs.templateModalBody) refs.templateModalBody.scrollTop = 0;
+    if (refs.libraryListWrap) refs.libraryListWrap.scrollTop = 0;
+    if (refs.templateList) refs.templateList.scrollTop = 0;
+    if (refs.libraryPreviewPane) refs.libraryPreviewPane.scrollTop = 0;
   }
 
   function insertLibraryBlockIntoDraft(draft, entry, insertAfterKey = state.selectedLayerKey) {
@@ -4998,18 +5014,21 @@
 
     byId("open-template-modal").addEventListener("click", () => {
       setLibraryMode("sections");
+      prepareLibraryModalForOpen();
       openModal(refs.templateModal);
       touchSession();
     });
 
     byId("open-widgets-modal").addEventListener("click", () => {
       setLibraryMode("widgets");
+      prepareLibraryModalForOpen();
       openModal(refs.templateModal);
       touchSession();
     });
 
     byId("open-assets-modal").addEventListener("click", () => {
       setLibraryMode("assets");
+      prepareLibraryModalForOpen();
       openModal(refs.templateModal);
       touchSession();
     });
