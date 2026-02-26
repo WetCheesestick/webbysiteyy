@@ -1,10 +1,58 @@
 (() => {
   const OPENING_USE_YOUTUBE = "ON"; // ON = use YouTube, OFF = use local MP4 files.
   const YT_EMBED_HOST = "https://www.youtube.com"; // More reliable on strict browsers than nocookie for autoplay intro.
-  const REQUESTED_QUALITY = "hd1080"; // Best effort only; YouTube may still choose based on bandwidth/device.
+  const DEFAULT_QUALITY = "hd1080"; // Best effort only; YouTube may still choose based on bandwidth/device.
+  const QUALITY_LEVELS = [
+    "auto",
+    "tiny",
+    "small",
+    "medium",
+    "large",
+    "hd720",
+    "hd1080",
+    "hd1440",
+    "hd2160",
+    "hd2880",
+    "highres"
+  ];
+  const QUALITY_ALIAS_MAP = {
+    auto: "auto",
+    tiny: "tiny",
+    "144p": "tiny",
+    small: "small",
+    "240p": "small",
+    medium: "medium",
+    "360p": "medium",
+    large: "large",
+    "480p": "large",
+    hd720: "hd720",
+    "720p": "hd720",
+    hd1080: "hd1080",
+    "1080p": "hd1080",
+    hd1440: "hd1440",
+    "1440p": "hd1440",
+    "2k": "hd1440",
+    hd2160: "hd2160",
+    "2160p": "hd2160",
+    "4k": "hd2160",
+    hd2880: "hd2880",
+    "2880p": "hd2880",
+    "5k": "hd2880",
+    highres: "highres"
+  };
 
   const hero = document.querySelector(".main-item");
   const introMode = String(hero?.getAttribute("data-intro-mode") || "original").toLowerCase();
+  const normalizeQualityTarget = (value) => {
+    const clean = String(value || "").trim().toLowerCase();
+    if (QUALITY_ALIAS_MAP[clean]) return QUALITY_ALIAS_MAP[clean];
+    if (QUALITY_LEVELS.includes(clean)) return clean;
+    const fallback = String(DEFAULT_QUALITY).toLowerCase();
+    return QUALITY_ALIAS_MAP[fallback] || DEFAULT_QUALITY;
+  };
+  const configuredQuality = normalizeQualityTarget(
+    hero?.getAttribute("data-video-quality-target") || window.__OPENING_VIDEO_QUALITY_TARGET__ || DEFAULT_QUALITY
+  );
 
   const embeds = Array.from(document.querySelectorAll(".opening-yt[data-yt-id]")).filter((embed) => {
     const layer = embed.closest(".opening-item, .main-video");
@@ -32,7 +80,7 @@
     );
   }
 
-  function buildYoutubeSrc(videoId) {
+  function buildYoutubeSrc(videoId, qualityTarget) {
     const params = new URLSearchParams({
       autoplay: "1",
       mute: "1",
@@ -46,9 +94,11 @@
       playsinline: "1",
       iv_load_policy: "3",
       cc_load_policy: "0",
-      enablejsapi: "1",
-      vq: REQUESTED_QUALITY
+      enablejsapi: "1"
     });
+    if (qualityTarget !== "auto") {
+      params.set("vq", qualityTarget);
+    }
 
     if (hasOrigin) {
       params.set("origin", window.location.origin);
@@ -58,9 +108,30 @@
     return `${YT_EMBED_HOST}/embed/${videoId}?${params.toString()}`;
   }
 
+  function hintPlaybackQuality(embed, qualityTarget) {
+    if (!embed || qualityTarget === "auto") return;
+    const post = () => {
+      if (!embed.contentWindow) return;
+      const payload = JSON.stringify({
+        event: "command",
+        func: "setPlaybackQuality",
+        args: [qualityTarget]
+      });
+      embed.contentWindow.postMessage(payload, YT_EMBED_HOST);
+      embed.contentWindow.postMessage(payload, "https://www.youtube-nocookie.com");
+    };
+
+    post();
+    window.setTimeout(post, 400);
+    window.setTimeout(post, 1200);
+  }
+
   embeds.forEach((embed, index) => {
     const videoId = embed.getAttribute("data-yt-id");
     const localSrc = embed.getAttribute("data-local-src");
+    const qualityTarget = normalizeQualityTarget(
+      embed.getAttribute("data-video-quality-target") || configuredQuality
+    );
     primeOpeningThumbnail(embed, videoId);
 
     // Local fallback if YouTube is unavailable in this context.
@@ -87,7 +158,14 @@
         embed.setAttribute("allowfullscreen", "");
         embed.setAttribute("loading", isPriority ? "eager" : "lazy");
         embed.setAttribute("fetchpriority", isPriority ? "high" : "auto");
-        embed.src = buildYoutubeSrc(videoId);
+        embed.addEventListener(
+          "load",
+          () => {
+            hintPlaybackQuality(embed, qualityTarget);
+          },
+          { once: true }
+        );
+        embed.src = buildYoutubeSrc(videoId, qualityTarget);
       };
 
       if (isPriority) {

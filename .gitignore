@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+*.pyc
+node_modules/
+playwright-report/
+test-results/
+assets/js/studio-published-settings.snapshot.json

@@ -1,0 +1,17 @@
+{
+  "name": "julianschnitt-studio-qa",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Studio validation and end-to-end regression harness",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "pytest -q",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:update-snapshots": "playwright test --update-snapshots"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "typescript": "^5.8.0"
+  }
+}

@@ -6,6 +6,7 @@
   const AUTH_SALT = "julian-studio-auth-v2";
   const SESSION_KEY = "julian_studio_session_v2";
   const UI_LAYOUT_KEY = "julian_studio_ui_layout_v1";
+  const INSPECTOR_TAB_KEY = "julian_studio_inspector_tab_v1";
   const DRAFT_MIGRATION_KEY = "julian_studio_draft_migration_v1";
   const SESSION_TIMEOUT_MS = 1000 * 60 * 45;
   const MAX_HISTORY = 120;
@@ -13,6 +14,66 @@
   const OVERLAY_MIN_WIDTH = 80;
   const OVERLAY_MIN_HEIGHT = 60;
   const HOME_BASE_SECTION_KEYS = ["super_syd", "works_intro", "works_classic", "works_3d"];
+  const YT_QUALITY_ORDER = [
+    "highres",
+    "hd2880",
+    "hd2160",
+    "hd1440",
+    "hd1080",
+    "hd720",
+    "large",
+    "medium",
+    "small",
+    "tiny"
+  ];
+  const YT_QUALITY_DEFAULTS = ["auto", "hd1080", "hd2160"];
+  const YT_QUALITY_LABELS = {
+    auto: "Auto (adaptive)",
+    highres: "Highest available",
+    hd2880: "2880p preferred",
+    hd2160: "4K preferred",
+    hd1440: "1440p preferred",
+    hd1080: "1080p preferred",
+    hd720: "720p preferred",
+    large: "480p preferred",
+    medium: "360p preferred",
+    small: "240p preferred",
+    tiny: "144p preferred"
+  };
+  const YT_QUALITY_ALIAS = {
+    auto: "auto",
+    highres: "highres",
+    hd2880: "hd2880",
+    "2880p": "hd2880",
+    "5k": "hd2880",
+    hd2160: "hd2160",
+    "2160p": "hd2160",
+    "4k": "hd2160",
+    hd1440: "hd1440",
+    "1440p": "hd1440",
+    "2k": "hd1440",
+    hd1080: "hd1080",
+    "1080p": "hd1080",
+    hd720: "hd720",
+    "720p": "hd720",
+    large: "large",
+    "480p": "large",
+    medium: "medium",
+    "360p": "medium",
+    small: "small",
+    "240p": "small",
+    tiny: "tiny",
+    "144p": "tiny"
+  };
+  const YT_IFRAME_API_SRC = "https://www.youtube.com/iframe_api";
+  const MODAL_FOCUSABLE_SELECTOR = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "[tabindex]:not([tabindex='-1'])"
+  ].join(",");
 
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const byId = (id) => document.getElementById(id);
@@ -830,6 +891,7 @@
     statusPill: byId("status-pill"),
     draftPill: byId("draft-pill"),
     autosavePill: byId("autosave-pill"),
+    liveRegion: byId("studio-live-region"),
 
     pageList: byId("page-list"),
     layerList: byId("layer-list"),
@@ -841,10 +903,25 @@
     previewDropIndicator: byId("preview-drop-indicator"),
 
     globalControls: byId("global-controls"),
+    introSingleUrlInput: byId("intro-single-url"),
+    backgroundVideoUrlInput: byId("background-video-url"),
+    introQualityTargetSelect: byId("intro-quality-target"),
+    backgroundQualityTargetSelect: byId("background-quality-target"),
+    introQualityAvailable: byId("intro-quality-available"),
+    backgroundQualityAvailable: byId("background-quality-available"),
+    introQualityDebug: byId("intro-quality-debug"),
+    backgroundQualityDebug: byId("background-quality-debug"),
+    refreshYoutubeResolutionsBtn: byId("refresh-youtube-resolutions"),
+    ytResolutionProbeHost: byId("yt-resolution-probe-host"),
     inspectorEmpty: byId("inspector-empty"),
     inspectorContent: byId("inspector-content"),
     layerControls: byId("layer-controls"),
     projectsEditor: byId("projects-editor"),
+    publishReport: byId("publish-report"),
+    seoTitleInput: byId("seo-page-title"),
+    seoDescriptionInput: byId("seo-page-description"),
+    seoCanonicalInput: byId("seo-page-canonical"),
+    seoNoindexPreview: byId("seo-noindex-preview"),
 
     templateModal: byId("template-modal"),
     templateList: byId("template-list"),
@@ -864,8 +941,19 @@
     mediaLabelInput: byId("media-label-input"),
     mediaUrlInput: byId("media-url-input"),
     mediaTypeInput: byId("media-type-input"),
+    mediaAltInput: byId("media-alt-input"),
+    mediaFavoriteInput: byId("media-favorite-input"),
+    mediaSearchInput: byId("media-search-input"),
 
     importInput: byId("import-settings-file"),
+    editorDensitySelect: byId("editor-density"),
+    rollbackPublishedBtn: byId("rollback-published"),
+    alignLeftBtn: byId("align-left"),
+    alignCenterBtn: byId("align-center"),
+    alignRightBtn: byId("align-right"),
+    distributeXBtn: byId("distribute-x"),
+    distributeYBtn: byId("distribute-y"),
+    toggleSnapBtn: byId("toggle-snap"),
     toggleLeftPanel: byId("toggle-left-panel"),
     toggleCanvasSidebar: byId("toggle-canvas-sidebar"),
     toggleRightPanel: byId("toggle-right-panel"),
@@ -875,6 +963,8 @@
   const state = {
     selectedPage: "home",
     selectedLayerKey: null,
+    selectedLayerKeys: [],
+    activeInspectorTab: "global",
     view: "desktop",
 
     draft: api.loadDraftSettings(),
@@ -888,6 +978,7 @@
     autosaveAt: null,
 
     mediaTarget: null,
+    mediaSearch: "",
     sessionMonitor: null,
 
     libraryMode: "sections",
@@ -901,13 +992,37 @@
     libraryPreviewId: null,
     draggingLibraryItem: null,
     previewDropCandidate: null,
+    publishLogLines: ["No publish activity yet."],
+    modalStack: [],
+    modalReturnFocus: null,
 
     uiLayout: {
       leftPanel: true,
       canvasSidebar: true,
       rightPanel: true
     },
-    uiLayoutBeforeFocus: null
+    uiLayoutBeforeFocus: null,
+    ytProbeApiPromise: null,
+    ytProbe: {
+      intro: {
+        timer: null,
+        token: 0,
+        lastProbedVideoId: "",
+        available: [...YT_QUALITY_DEFAULTS],
+        status: "Available resolutions: checking...",
+        statusCode: "checking",
+        debug: "Debug: waiting for probe."
+      },
+      background: {
+        timer: null,
+        token: 0,
+        lastProbedVideoId: "",
+        available: [...YT_QUALITY_DEFAULTS],
+        status: "Available resolutions: checking...",
+        statusCode: "checking",
+        debug: "Debug: waiting for probe."
+      }
+    }
   };
 
   function normalizeUILayout(layout) {
@@ -945,6 +1060,38 @@
     } catch (_err) {
       // Ignore storage failures.
     }
+  }
+
+  function normalizeInspectorTab(tab) {
+    const value = String(tab || "").trim().toLowerCase();
+    if (value === "layer" || value === "projects" || value === "seo" || value === "publish") return value;
+    return "global";
+  }
+
+  function loadInspectorTab() {
+    try {
+      return normalizeInspectorTab(window.localStorage.getItem(INSPECTOR_TAB_KEY));
+    } catch (_err) {
+      return "global";
+    }
+  }
+
+  function saveInspectorTab(tab) {
+    try {
+      window.localStorage.setItem(INSPECTOR_TAB_KEY, normalizeInspectorTab(tab));
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+  }
+
+  function applyEditorDensity() {
+    const density = String(state.draft?.designTokens?.editorDensity || "comfortable").toLowerCase() === "compact"
+      ? "compact"
+      : "comfortable";
+    document.body.setAttribute("data-editor-density", density);
+    const reducedMotion = String(state.draft?.designTokens?.reducedMotion || "OFF").toUpperCase() === "ON";
+    document.body.classList.toggle("studio-reduced-motion", reducedMotion);
+    if (refs.editorDensitySelect) refs.editorDensitySelect.value = density;
   }
 
   function isFocusMode() {
@@ -1006,9 +1153,26 @@
     refs.editorPanel.hidden = panel !== "editor";
   }
 
+  function formatPublishLogEntry(message, detail = null) {
+    const stamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+    const body = detail && typeof detail === "object" ? `\n${JSON.stringify(detail, null, 2)}` : "";
+    return `[${stamp}] ${message}${body}`;
+  }
+
+  function appendPublishReport(message, detail = null) {
+    state.publishLogLines.unshift(formatPublishLogEntry(message, detail));
+    state.publishLogLines = state.publishLogLines.slice(0, 120);
+    if (refs.publishReport) {
+      refs.publishReport.textContent = state.publishLogLines.join("\n\n");
+    }
+  }
+
   function setStatus(message, type = "ok") {
     refs.statusPill.textContent = message;
     refs.statusPill.dataset.type = type;
+    if (refs.liveRegion) {
+      refs.liveRegion.textContent = `${type.toUpperCase()}: ${message}`;
+    }
   }
 
   function setDraftPill() {
@@ -1127,11 +1291,58 @@
     const catalog = api.getSectionCatalog(state.draft);
     if (!catalog.length) {
       state.selectedLayerKey = null;
+      state.selectedLayerKeys = [];
       return;
     }
 
     const exists = catalog.some((layer) => layer.key === state.selectedLayerKey);
     if (!exists) state.selectedLayerKey = catalog[0].key;
+    const allowed = new Set(catalog.map((layer) => layer.key));
+    const nextKeys = [];
+    (Array.isArray(state.selectedLayerKeys) ? state.selectedLayerKeys : []).forEach((key) => {
+      if (!allowed.has(key) || nextKeys.includes(key)) return;
+      nextKeys.push(key);
+    });
+    if (!nextKeys.length && state.selectedLayerKey) nextKeys.push(state.selectedLayerKey);
+    state.selectedLayerKeys = nextKeys;
+  }
+
+  function isLayerSelected(layerKey) {
+    return Array.isArray(state.selectedLayerKeys) && state.selectedLayerKeys.includes(layerKey);
+  }
+
+  function setSingleLayerSelection(layerKey) {
+    if (!layerKey) return;
+    state.selectedLayerKey = layerKey;
+    state.selectedLayerKeys = [layerKey];
+    if (state.draft?.layers) {
+      state.draft.layers.selectionMode = "single";
+    }
+  }
+
+  function toggleLayerSelection(layerKey) {
+    if (!layerKey) return;
+    const next = Array.isArray(state.selectedLayerKeys) ? [...state.selectedLayerKeys] : [];
+    if (next.includes(layerKey)) {
+      const filtered = next.filter((key) => key !== layerKey);
+      state.selectedLayerKeys = filtered.length ? filtered : [layerKey];
+    } else {
+      next.push(layerKey);
+      state.selectedLayerKeys = next;
+    }
+    state.selectedLayerKey = state.selectedLayerKeys[state.selectedLayerKeys.length - 1] || layerKey;
+    if (state.draft?.layers) {
+      state.draft.layers.selectionMode = state.selectedLayerKeys.length > 1 ? "multi" : "single";
+    }
+  }
+
+  function selectedLayerKeysForTools() {
+    return (Array.isArray(state.selectedLayerKeys) && state.selectedLayerKeys.length
+      ? state.selectedLayerKeys
+      : state.selectedLayerKey
+        ? [state.selectedLayerKey]
+        : []
+    ).filter(Boolean);
   }
 
   function touchSession() {
@@ -1323,6 +1534,554 @@
       .reduce((acc, key) => (acc && Object.prototype.hasOwnProperty.call(acc, key) ? acc[key] : undefined), obj);
   }
 
+  function normalizeQualityToken(value) {
+    const clean = String(value || "").trim().toLowerCase();
+    if (!clean) return "";
+    if (YT_QUALITY_ALIAS[clean]) return YT_QUALITY_ALIAS[clean];
+    return clean;
+  }
+
+  function qualityLabel(value) {
+    const token = normalizeQualityToken(value);
+    if (!token) return "Unknown";
+    if (YT_QUALITY_LABELS[token]) return YT_QUALITY_LABELS[token];
+    return `${token} preferred`;
+  }
+
+  function sortQualityLevels(levels) {
+    const seen = new Set();
+    const normalized = [];
+    (Array.isArray(levels) ? levels : []).forEach((value) => {
+      const token = normalizeQualityToken(value);
+      if (!token || token === "auto" || seen.has(token)) return;
+      seen.add(token);
+      normalized.push(token);
+    });
+
+    const ordered = YT_QUALITY_ORDER.filter((token) => seen.has(token));
+    const unknown = normalized.filter((token) => !YT_QUALITY_ORDER.includes(token)).sort();
+    return ["auto", ...ordered, ...unknown];
+  }
+
+  function extractYoutubeVideoId(input) {
+    const value = String(input || "").trim();
+    if (!value) return "";
+    if (/^[a-zA-Z0-9_-]{11}$/.test(value)) return value;
+
+    let parsed;
+    try {
+      parsed = new URL(value, window.location.origin);
+    } catch (_err) {
+      return "";
+    }
+
+    const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+    if (host === "youtu.be") {
+      return parsed.pathname.replace(/\//g, "").trim();
+    }
+    if (host.endsWith("youtube.com") || host.endsWith("youtube-nocookie.com")) {
+      if (parsed.pathname === "/watch") return parsed.searchParams.get("v") || "";
+      if (parsed.pathname.startsWith("/shorts/")) return parsed.pathname.split("/")[2] || "";
+      if (parsed.pathname.startsWith("/embed/")) return parsed.pathname.split("/")[2] || "";
+    }
+    return "";
+  }
+
+  function getQualityControlConfig(kind) {
+    if (kind === "intro") {
+      return {
+        urlPath: "content.opening.singleIntroEmbedUrl",
+        qualityPath: "content.opening.introQualityTarget",
+        urlInput: refs.introSingleUrlInput,
+        select: refs.introQualityTargetSelect,
+        availableText: refs.introQualityAvailable,
+        debugText: refs.introQualityDebug,
+        probeState: state.ytProbe.intro
+      };
+    }
+
+    return {
+      urlPath: "content.opening.backgroundEmbedUrl",
+      qualityPath: "content.opening.backgroundQualityTarget",
+      urlInput: refs.backgroundVideoUrlInput,
+      select: refs.backgroundQualityTargetSelect,
+      availableText: refs.backgroundQualityAvailable,
+      debugText: refs.backgroundQualityDebug,
+      probeState: state.ytProbe.background
+    };
+  }
+
+  function getQualityTargetValue(path) {
+    return normalizeQualityToken(getPathValue(state.draft, path) || "auto") || "auto";
+  }
+
+  function setDraftQualityTarget(path, value) {
+    const nextValue = normalizeQualityToken(value) || "auto";
+    const current = normalizeQualityToken(getPathValue(state.draft, path) || "auto") || "auto";
+    if (nextValue === current) return;
+    setPathValue(state.draft, path, nextValue);
+    state.draft = api.normalizeSettings(state.draft);
+    scheduleAutosave();
+    setDraftPill();
+  }
+
+  function updateQualitySelectOptions(kind, levels) {
+    const cfg = getQualityControlConfig(kind);
+    if (!cfg.select) return;
+
+    const normalizedLevels = sortQualityLevels(levels && levels.length ? levels : YT_QUALITY_DEFAULTS);
+    const selectedCurrent = getQualityTargetValue(cfg.qualityPath);
+    const fallbackSelection = normalizedLevels.find((level) => level !== "auto") || "auto";
+    const selectedNext = normalizedLevels.includes(selectedCurrent) ? selectedCurrent : fallbackSelection;
+
+    cfg.select.innerHTML = "";
+    normalizedLevels.forEach((level) => {
+      const option = document.createElement("option");
+      option.value = level;
+      option.textContent = qualityLabel(level);
+      cfg.select.appendChild(option);
+    });
+    cfg.select.value = selectedNext;
+    if (selectedNext !== selectedCurrent) {
+      setDraftQualityTarget(cfg.qualityPath, selectedNext);
+    }
+  }
+
+  function setQualityAvailabilityMessage(kind, message) {
+    const cfg = getQualityControlConfig(kind);
+    if (!cfg.availableText) return;
+    cfg.availableText.textContent = message;
+  }
+
+  function setQualityDebugMessage(kind, message) {
+    const cfg = getQualityControlConfig(kind);
+    if (!cfg.debugText) return;
+    cfg.debugText.textContent = message;
+  }
+
+  function createProbeError(code, detail) {
+    return {
+      code: String(code || "probe_failed"),
+      detail: String(detail || "")
+    };
+  }
+
+  function normalizeProbeError(err, fallbackCode = "probe_failed") {
+    if (!err) return createProbeError(fallbackCode, "");
+    if (typeof err === "string") return createProbeError(fallbackCode, err);
+    if (typeof err === "object") {
+      const code = String(err.code || err.error || fallbackCode);
+      const detail = String(err.detail || err.message || "");
+      return createProbeError(code, detail);
+    }
+    return createProbeError(fallbackCode, "");
+  }
+
+  function mapBackendErrorToProbeError(errorCode) {
+    const token = String(errorCode || "").trim().toUpperCase();
+    if (token === "PARSE_FAILED") return createProbeError("invalid_url", "Backend could not parse a YouTube video ID.");
+    if (token === "YT_DLP_MISSING") return createProbeError("api_blocked", "yt-dlp is not installed on this machine.");
+    if (token === "VIDEO_NOT_EMBEDDABLE") return createProbeError("embed_rejected", "Video owner disabled embedding.");
+    if (token === "VIDEO_UNAVAILABLE") return createProbeError("embed_rejected", "Video is private/restricted/unavailable.");
+    if (token === "NETWORK_ERROR") return createProbeError("api_timeout", "Backend probe timed out or hit a network error.");
+    return createProbeError("probe_failed", token || "Unknown backend probe error.");
+  }
+
+  function updateProbeState(kind, patch = {}) {
+    const cfg = getQualityControlConfig(kind);
+    if (!cfg || !cfg.probeState) return;
+    const probeState = cfg.probeState;
+    if (Array.isArray(patch.available)) {
+      probeState.available = sortQualityLevels(patch.available);
+    }
+    if (typeof patch.status === "string") probeState.status = patch.status;
+    if (typeof patch.statusCode === "string") probeState.statusCode = patch.statusCode;
+    if (typeof patch.debug === "string") probeState.debug = patch.debug;
+  }
+
+  function updateQualityControlsFromState() {
+    ["intro", "background"].forEach((kind) => {
+      const cfg = getQualityControlConfig(kind);
+      if (!cfg.select || !cfg.probeState) return;
+      updateQualitySelectOptions(kind, cfg.probeState.available);
+      setQualityAvailabilityMessage(kind, cfg.probeState.status || "Available resolutions: checking...");
+      setQualityDebugMessage(
+        kind,
+        cfg.probeState.debug ||
+          `Debug: ${cfg.probeState.statusCode ? `[${cfg.probeState.statusCode}]` : ""} waiting for probe.`
+      );
+    });
+  }
+
+  function loadYoutubeIframeApi() {
+    if (window.YT && typeof window.YT.Player === "function") {
+      return Promise.resolve(window.YT);
+    }
+    if (state.ytProbeApiPromise) return state.ytProbeApiPromise;
+
+    state.ytProbeApiPromise = new Promise((resolve, reject) => {
+      let settled = false;
+      const done = (fn, value) => {
+        if (settled) return;
+        settled = true;
+        fn(value);
+      };
+
+      const timeout = window.setTimeout(() => {
+        done(reject, createProbeError("api_timeout", "YouTube Iframe API load timed out."));
+      }, 12000);
+
+      const previousReady = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (typeof previousReady === "function") {
+          try {
+            previousReady();
+          } catch (_err) {
+            // Ignore third-party callback failures.
+          }
+        }
+        window.clearTimeout(timeout);
+        done(resolve, window.YT);
+      };
+
+      const existing = document.querySelector('script[data-studio-yt-api="1"]');
+      if (!existing) {
+        const script = document.createElement("script");
+        script.src = YT_IFRAME_API_SRC;
+        script.async = true;
+        script.defer = true;
+        script.dataset.studioYtApi = "1";
+        script.onerror = () => {
+          window.clearTimeout(timeout);
+          done(reject, createProbeError("api_blocked", "Unable to load YouTube Iframe API script."));
+        };
+        document.head.appendChild(script);
+      } else if (window.YT && typeof window.YT.Player === "function") {
+        window.clearTimeout(timeout);
+        done(resolve, window.YT);
+      }
+    }).catch((err) => {
+      state.ytProbeApiPromise = null;
+      throw err;
+    });
+
+    return state.ytProbeApiPromise;
+  }
+
+  function probeYoutubeQualityLevels(videoId) {
+    return loadYoutubeIframeApi().then(
+      (YT) =>
+        new Promise((resolve, reject) => {
+          if (!refs.ytResolutionProbeHost) {
+            reject(createProbeError("api_blocked", "Missing hidden probe host container."));
+            return;
+          }
+
+          const probeId = `yt-probe-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+          const mount = document.createElement("div");
+          mount.id = probeId;
+          mount.style.width = "1px";
+          mount.style.height = "1px";
+          refs.ytResolutionProbeHost.appendChild(mount);
+
+          let player = null;
+          let done = false;
+          let pollTimer = null;
+          let hardTimeout = null;
+          let polls = 0;
+          const maxPolls = 6;
+
+          const cleanup = () => {
+            if (pollTimer) window.clearTimeout(pollTimer);
+            if (hardTimeout) window.clearTimeout(hardTimeout);
+            if (player && typeof player.destroy === "function") {
+              try {
+                player.destroy();
+              } catch (_err) {
+                // Ignore cleanup failures.
+              }
+            }
+            mount.remove();
+          };
+
+          const finishResolve = (levels) => {
+            if (done) return;
+            done = true;
+            cleanup();
+            resolve(levels);
+          };
+
+          const finishReject = (error) => {
+            if (done) return;
+            done = true;
+            cleanup();
+            reject(error);
+          };
+
+          const readLevels = () => {
+            if (done || !player) return;
+            let levels = [];
+            try {
+              levels =
+                typeof player.getAvailableQualityLevels === "function"
+                  ? player.getAvailableQualityLevels() || []
+                  : [];
+            } catch (_err) {
+              levels = [];
+            }
+
+            const normalized = sortQualityLevels(levels).filter((level) => level !== "auto");
+            if (normalized.length > 0) {
+              finishResolve(normalized);
+              return;
+            }
+
+            polls += 1;
+            if (polls >= maxPolls) {
+              finishReject(createProbeError("no_levels_reported", "YouTube returned no quality levels for this context."));
+              return;
+            }
+            pollTimer = window.setTimeout(readLevels, 350);
+          };
+
+          hardTimeout = window.setTimeout(() => {
+            finishReject(createProbeError("api_timeout", "YouTube probe timed out."));
+          }, 10000);
+
+          try {
+            player = new YT.Player(mount, {
+              width: "1",
+              height: "1",
+              videoId,
+              playerVars: {
+                autoplay: 0,
+                controls: 0,
+                rel: 0,
+                modestbranding: 1,
+                playsinline: 1
+              },
+              events: {
+                onReady: () => {
+                  try {
+                    if (typeof player.cueVideoById === "function") {
+                      player.cueVideoById(videoId);
+                    }
+                  } catch (_err) {
+                    // Ignore cue errors and continue probing.
+                  }
+                  pollTimer = window.setTimeout(readLevels, 180);
+                },
+                onError: (event) => {
+                  const code = Number(event && event.data);
+                  if (code === 101 || code === 150) {
+                    finishReject(createProbeError("embed_rejected", "YouTube embedding is disabled for this video."));
+                    return;
+                  }
+                  if (code === 2) {
+                    finishReject(createProbeError("invalid_url", "YouTube reported an invalid video ID."));
+                    return;
+                  }
+                  finishReject(
+                    createProbeError(
+                      "api_blocked",
+                      `YouTube player error ${Number.isFinite(code) ? code : "unknown"}.`
+                    )
+                  );
+                }
+              }
+            });
+          } catch (err) {
+            const normalizedErr = normalizeProbeError(err, "api_blocked");
+            finishReject(
+              createProbeError(
+                normalizedErr.code,
+                normalizedErr.detail || "Failed to initialize YouTube probe player."
+              )
+            );
+          }
+        })
+    );
+  }
+
+  async function fetchBackendYoutubeResolutions(url) {
+    const response = await fetch("/__studio/youtube-resolutions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        url: String(url || "")
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const detail = payload && payload.error ? String(payload.error) : `HTTP ${response.status}`;
+      throw createProbeError("api_blocked", detail);
+    }
+
+    if (!payload || payload.ok !== true) {
+      const mappedError = mapBackendErrorToProbeError(payload && payload.error);
+      return {
+        ok: false,
+        error: mappedError
+      };
+    }
+
+    const tiers = sortQualityLevels(payload.tiers).filter((tier) => tier !== "auto");
+    return {
+      ok: true,
+      videoId: String(payload.videoId || ""),
+      tiers
+    };
+  }
+
+  function requestYoutubeResolutionProbe(kind, options = {}) {
+    const cfg = getQualityControlConfig(kind);
+    if (!cfg || !cfg.probeState) return;
+    const probeState = cfg.probeState;
+
+    const urlSource =
+      typeof options.url === "string"
+        ? options.url
+        : String(getPathValue(state.draft, cfg.urlPath) || "");
+    const url = String(urlSource || "").trim();
+    const videoId = extractYoutubeVideoId(url);
+
+    if (probeState.timer) {
+      window.clearTimeout(probeState.timer);
+      probeState.timer = null;
+    }
+
+    if (!videoId) {
+      probeState.lastProbedVideoId = "";
+      updateProbeState(kind, {
+        available: [...YT_QUALITY_DEFAULTS],
+        status: "Available resolutions: enter a valid YouTube URL.",
+        statusCode: "invalid_url",
+        debug: "Debug: [invalid_url] Could not parse a YouTube video ID from the URL."
+      });
+      updateQualityControlsFromState();
+      return;
+    }
+
+    if (!options.force && probeState.lastProbedVideoId === videoId) {
+      updateQualityControlsFromState();
+      return;
+    }
+
+    updateProbeState(kind, {
+      status: "Available resolutions: checking...",
+      statusCode: "checking",
+      debug: "Debug: [checking] Running browser probe, then backend fallback if needed."
+    });
+    updateQualityControlsFromState();
+
+    const runProbe = async () => {
+      probeState.token += 1;
+      const token = probeState.token;
+
+      let frontendError = null;
+
+      try {
+        const levels = await probeYoutubeQualityLevels(videoId);
+        if (token !== probeState.token) return;
+        const sorted = sortQualityLevels(levels);
+        const listed = sorted
+          .filter((level) => level !== "auto")
+          .map((level) => qualityLabel(level).replace(" preferred", ""))
+          .join(", ");
+        probeState.lastProbedVideoId = videoId;
+        updateProbeState(kind, {
+          available: sorted.length ? sorted : [...YT_QUALITY_DEFAULTS],
+          status: `Available resolutions: ${listed || "none reported"}.`,
+          statusCode: "frontend_probe_ok",
+          debug: "Debug: [frontend_probe_ok] YouTube Iframe API returned quality tiers directly."
+        });
+        updateQualityControlsFromState();
+        return;
+      } catch (err) {
+        frontendError = normalizeProbeError(err, "api_blocked");
+      }
+
+      try {
+        const backendResult = await fetchBackendYoutubeResolutions(url);
+        if (token !== probeState.token) return;
+        if (backendResult && backendResult.ok && Array.isArray(backendResult.tiers) && backendResult.tiers.length) {
+          const sorted = sortQualityLevels(backendResult.tiers);
+          const listed = sorted
+            .filter((level) => level !== "auto")
+            .map((level) => qualityLabel(level).replace(" preferred", ""))
+            .join(", ");
+          probeState.lastProbedVideoId = videoId;
+          updateProbeState(kind, {
+            available: sorted,
+            status: `Available resolutions: ${listed || "none reported"} (backend fallback).`,
+            statusCode: "backend_fallback_used",
+            debug: `Debug: [backend_fallback_used] Frontend probe failed with [${frontendError.code}] ${frontendError.detail || ""}`
+              .trim()
+          });
+          updateQualityControlsFromState();
+          return;
+        }
+
+        const backendMappedError = normalizeProbeError(
+          backendResult && backendResult.error ? backendResult.error : "probe_failed",
+          "probe_failed"
+        );
+        probeState.lastProbedVideoId = videoId;
+        updateProbeState(kind, {
+          available: [...YT_QUALITY_DEFAULTS],
+          status: "Available resolutions: probe failed. Using fallback options.",
+          statusCode: frontendError.code || "probe_failed",
+          debug:
+            `Debug: [${frontendError.code || "probe_failed"}] ${frontendError.detail || "Frontend probe failed."}` +
+            ` | Backend: [${backendMappedError.code}] ${backendMappedError.detail || "Backend fallback failed."}`
+        });
+        updateQualityControlsFromState();
+      } catch (backendErr) {
+        if (token !== probeState.token) return;
+        const backendMappedError = normalizeProbeError(backendErr, "probe_failed");
+        probeState.lastProbedVideoId = videoId;
+        updateProbeState(kind, {
+          available: [...YT_QUALITY_DEFAULTS],
+          status: "Available resolutions: probe failed. Using fallback options.",
+          statusCode: frontendError.code || "probe_failed",
+          debug:
+            `Debug: [${frontendError.code || "probe_failed"}] ${frontendError.detail || "Frontend probe failed."}` +
+            ` | Backend: [${backendMappedError.code}] ${backendMappedError.detail || "Backend fallback failed."}`
+        });
+        updateQualityControlsFromState();
+      }
+    };
+
+    probeState.timer = window.setTimeout(runProbe, options.immediate ? 0 : 360);
+  }
+
+  function syncYoutubeResolutionControls(options = {}) {
+    updateQualityControlsFromState();
+
+    const introUrl =
+      typeof options.introUrl === "string"
+        ? options.introUrl
+        : String(getPathValue(state.draft, "content.opening.singleIntroEmbedUrl") || "");
+    const backgroundUrl =
+      typeof options.backgroundUrl === "string"
+        ? options.backgroundUrl
+        : String(getPathValue(state.draft, "content.opening.backgroundEmbedUrl") || "");
+
+    requestYoutubeResolutionProbe("intro", {
+      force: options.force === true,
+      immediate: options.immediate === true,
+      url: introUrl
+    });
+    requestYoutubeResolutionProbe("background", {
+      force: options.force === true,
+      immediate: options.immediate === true,
+      url: backgroundUrl
+    });
+  }
+
   function getLayers() {
     return api.getSectionCatalog(state.draft);
   }
@@ -1484,7 +2243,8 @@
         setStatus("Select a layer first to apply a style asset.", "warn");
         return;
       }
-      const next = api.setSectionStyle(state.draft, selectedLayer.key, entry.style || {});
+      let next = api.setSectionStyle(state.draft, selectedLayer.key, entry.style || {});
+      next = api.recordTemplateUsage(next, entry.id);
       applyDraft(next, `${entry.name} style applied.`);
       return;
     }
@@ -1503,7 +2263,8 @@
         zIndex: 12
       });
     }
-    if (insertedLayerKey) state.selectedLayerKey = insertedLayerKey;
+    finalized = api.recordTemplateUsage(finalized, entry.id);
+    if (insertedLayerKey) setSingleLayerSelection(insertedLayerKey);
     const message = options.dropPosition ? `${entry.name} dropped into preview.` : `${entry.name} added.`;
     applyDraft(finalized, message);
   }
@@ -1663,7 +2424,7 @@
       if (result.insertedLayerKey) anchor = result.insertedLayerKey;
     });
 
-    state.selectedLayerKey = anchor;
+    if (anchor) setSingleLayerSelection(anchor);
     applyDraft(next, "Demo layout inserted.");
   }
 
@@ -1705,7 +2466,7 @@
       </div>
     `;
 
-    if (layer.key === state.selectedLayerKey) {
+    if (isLayerSelected(layer.key)) {
       li.style.borderColor = "rgba(125, 211, 252, 0.7)";
       li.style.background = "rgba(125, 211, 252, 0.12)";
     }
@@ -1774,7 +2535,9 @@
 
     getLayers().forEach((layer) => {
       const card = document.createElement("li");
-      card.className = `canvas-card${layer.key === state.selectedLayerKey ? " selected" : ""}`;
+      card.className = `canvas-card${isLayerSelected(layer.key) ? " selected" : ""}${
+        layer.key === state.selectedLayerKey ? " selected-primary" : ""
+      }`;
       card.setAttribute("data-layer-key", layer.key);
 
       const quickWidth = layer.style?.maxWidth || 1080;
@@ -1819,6 +2582,90 @@
         input.value = value ?? "";
       }
     });
+    applyEditorDensity();
+    updateLayerToolButtons();
+  }
+
+  function getInspectorTabButtons() {
+    return Array.from(document.querySelectorAll("[data-inspector-tab-btn]"));
+  }
+
+  function getInspectorPanels() {
+    return Array.from(document.querySelectorAll("[data-inspector-tab]"));
+  }
+
+  function setInspectorTab(tab, options = {}) {
+    const nextTab = normalizeInspectorTab(tab || state.activeInspectorTab);
+    state.activeInspectorTab = nextTab;
+    saveInspectorTab(nextTab);
+
+    const buttons = getInspectorTabButtons();
+    const panels = getInspectorPanels();
+
+    buttons.forEach((button) => {
+      const tabKey = normalizeInspectorTab(button.getAttribute("data-inspector-tab-btn"));
+      const active = tabKey === nextTab;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+      button.setAttribute("tabindex", active ? "0" : "-1");
+      button.setAttribute("role", "tab");
+      if (options.focusButton && active) {
+        try {
+          button.focus({ preventScroll: true });
+        } catch (_err) {
+          button.focus();
+        }
+      }
+    });
+
+    panels.forEach((panel) => {
+      const tabKey = normalizeInspectorTab(panel.getAttribute("data-inspector-tab"));
+      const active = tabKey === nextTab;
+      panel.classList.toggle("hidden", !active);
+      panel.hidden = !active;
+      panel.setAttribute("aria-hidden", active ? "false" : "true");
+    });
+  }
+
+  function resolveSeoPageKey() {
+    if (state.selectedPage === "home") return "index";
+    if (Object.prototype.hasOwnProperty.call(state.draft.pages, state.selectedPage)) return state.selectedPage;
+    return "index";
+  }
+
+  function renderSeoControls() {
+    if (!refs.seoTitleInput || !refs.seoDescriptionInput || !refs.seoCanonicalInput || !refs.seoNoindexPreview) return;
+    const pageKey = resolveSeoPageKey();
+    const page = state.draft.pages && state.draft.pages[pageKey];
+    const seo = page && page.seo ? page.seo : { title: "", description: "", canonical: "", noindex: false };
+
+    refs.seoTitleInput.value = seo.title || "";
+    refs.seoDescriptionInput.value = seo.description || "";
+    refs.seoCanonicalInput.value = seo.canonical || "";
+
+    const enabled = page ? Boolean(page.enabled) : true;
+    const noindex = Boolean(seo.noindex);
+    refs.seoNoindexPreview.textContent = `Noindex preview: ${noindex ? "ON" : "OFF"} (${enabled ? "page enabled" : "page disabled"})`;
+  }
+
+  function updateLayerToolButtons() {
+    const selectedCount = selectedLayerKeysForTools().length;
+    const homeMode = state.selectedPage === "home";
+    const canBulk = homeMode && selectedCount >= 2;
+    const canDistribute = homeMode && selectedCount >= 3;
+    const snapEnabled = Boolean(state.draft?.layers?.snap?.enabled);
+    const snapSize = Math.max(1, Number(state.draft?.layers?.snap?.size || OVERLAY_SNAP_PX));
+
+    if (refs.alignLeftBtn) refs.alignLeftBtn.disabled = !canBulk;
+    if (refs.alignCenterBtn) refs.alignCenterBtn.disabled = !canBulk;
+    if (refs.alignRightBtn) refs.alignRightBtn.disabled = !canBulk;
+    if (refs.distributeXBtn) refs.distributeXBtn.disabled = !canDistribute;
+    if (refs.distributeYBtn) refs.distributeYBtn.disabled = !canDistribute;
+    if (refs.toggleSnapBtn) {
+      refs.toggleSnapBtn.disabled = !homeMode;
+      refs.toggleSnapBtn.textContent = `Snap: ${snapEnabled ? "On" : "Off"} (${snapSize}px)`;
+      refs.toggleSnapBtn.setAttribute("aria-pressed", snapEnabled ? "true" : "false");
+    }
   }
 
   function styleFieldsMarkup(style, disabled) {
@@ -2213,6 +3060,7 @@
       li.className = "template-item";
       li.setAttribute("data-library-id", entry.id);
       const isSelected = entry.id === state.libraryPreviewId;
+      const isFavoriteTemplate = Boolean(state.draft?.library?.favoriteTemplateIds?.includes(entry.id));
       const draggable = isDraggableLibraryMode(state.libraryMode);
       li.classList.toggle("is-selected", isSelected);
       li.classList.toggle("is-draggable", draggable);
@@ -2231,10 +3079,12 @@
         <div class="template-meta">
           <span class="chip">${entry.category}</span>
           <span class="chip">${typeLabel}</span>
+          ${isFavoriteTemplate ? '<span class="chip">Favorite</span>' : ""}
           ${draggable ? '<span class="chip drag-badge">Drag into preview</span>' : ""}
         </div>
         <div class="inline-actions" style="margin-top:8px">
           <button type="button" data-action="library-add" data-library-id="${entry.id}">${cta}</button>
+          <button type="button" data-action="library-favorite" data-library-id="${entry.id}">${isFavoriteTemplate ? "Unfavorite" : "Favorite"}</button>
         </div>
       `;
       refs.templateList.appendChild(li);
@@ -2264,16 +3114,35 @@
 
   function renderMediaList() {
     refs.mediaList.innerHTML = "";
+    const rawItems = Array.isArray(state.draft.mediaLibrary) ? state.draft.mediaLibrary : [];
+    const query = String(state.mediaSearch || "").trim().toLowerCase();
+    const items = rawItems
+      .filter((item) => {
+        if (!query) return true;
+        const haystack = [item.label, item.url, item.alt, item.type]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(query);
+      })
+      .sort((a, b) => {
+        if (Boolean(a.favorite) !== Boolean(b.favorite)) return a.favorite ? -1 : 1;
+        const aUsed = Date.parse(a.lastUsedAtUtc || 0) || 0;
+        const bUsed = Date.parse(b.lastUsedAtUtc || 0) || 0;
+        if (aUsed !== bUsed) return bUsed - aUsed;
+        return String(a.label || "").localeCompare(String(b.label || ""));
+      });
 
-    if (!state.draft.mediaLibrary.length) {
+    if (!items.length) {
       const li = document.createElement("li");
       li.className = "media-item";
-      li.innerHTML = "<p>No media items yet.</p>";
+      li.innerHTML = `<p>${rawItems.length ? "No media items match this search." : "No media items yet."}</p>`;
       refs.mediaList.appendChild(li);
       return;
     }
 
-    state.draft.mediaLibrary.forEach((item) => {
+    items.forEach((item) => {
+      const missingAlt = item.type === "image" && !String(item.alt || "").trim();
       const li = document.createElement("li");
       li.className = "media-item";
       li.setAttribute("data-media-id", item.id);
@@ -2282,13 +3151,20 @@
         <h4>${item.label}</h4>
         <p>${item.url}</p>
         <div class="media-meta">
-          <span class="chip">${item.type}</span>
+          <div class="inline-actions">
+            <span class="chip">${item.type}</span>
+            ${item.favorite ? '<span class="chip">Favorite</span>' : ""}
+            ${missingAlt ? '<span class="chip">Alt missing</span>' : ""}
+            ${item.usageCount ? `<span class="chip">Used ${Number(item.usageCount)}x</span>` : ""}
+          </div>
           <div class="inline-actions">
             <button type="button" data-action="use-media">Use</button>
+            <button type="button" data-action="toggle-favorite">${item.favorite ? "Unfavorite" : "Favorite"}</button>
             <button type="button" data-action="copy-media">Copy URL</button>
             <button type="button" data-action="delete-media">Delete</button>
           </div>
         </div>
+        <p style="margin-top:8px">${item.type === "image" ? `Alt: ${item.alt || "(missing)"}` : "Alt: n/a for video"}</p>
       `;
 
       refs.mediaList.appendChild(li);
@@ -2301,16 +3177,22 @@
     renderLayerList();
     renderCanvas();
     renderGlobalControls();
+    renderSeoControls();
     renderLayerControls();
     renderProjectsEditor();
     renderLibraryControls();
     renderTemplateList();
     renderLibraryPreview();
     renderMediaList();
+    if (refs.publishReport) refs.publishReport.textContent = state.publishLogLines.join("\n\n");
+    setInspectorTab(state.activeInspectorTab);
+    updateLayerToolButtons();
+    applyEditorDensity();
     queueOverlayRender();
     setDraftPill();
     setAutosavePill();
     setUndoRedoState();
+    syncYoutubeResolutionControls();
   }
 
   function refreshPreview() {
@@ -2323,14 +3205,74 @@
     window.open(url, "_blank", "noopener");
   }
 
+  function getModalFocusable(modal) {
+    if (!modal) return [];
+    return Array.from(modal.querySelectorAll(MODAL_FOCUSABLE_SELECTOR)).filter((node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      if (node.hidden) return false;
+      if (node.getAttribute("aria-hidden") === "true") return false;
+      return node.offsetParent !== null || node === document.activeElement;
+    });
+  }
+
+  function handleModalKeydown(event) {
+    const modal = state.modalStack[state.modalStack.length - 1];
+    if (!modal) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeModal(modal);
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const focusable = getModalFocusable(modal);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+      return;
+    }
+    if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function openModal(modal) {
+    if (!modal) return;
+    state.modalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
+    state.modalStack = [...state.modalStack.filter((entry) => entry !== modal), modal];
+    document.addEventListener("keydown", handleModalKeydown, true);
+    const focusable = getModalFocusable(modal);
+    if (focusable.length) {
+      try {
+        focusable[0].focus({ preventScroll: true });
+      } catch (_err) {
+        focusable[0].focus();
+      }
+    }
   }
 
   function closeModal(modal) {
+    if (!modal) return;
     modal.classList.add("hidden");
     modal.setAttribute("aria-hidden", "true");
+    state.modalStack = state.modalStack.filter((entry) => entry !== modal);
+    if (!state.modalStack.length) {
+      document.removeEventListener("keydown", handleModalKeydown, true);
+      if (state.modalReturnFocus) {
+        try {
+          state.modalReturnFocus.focus({ preventScroll: true });
+        } catch (_err) {
+          state.modalReturnFocus.focus();
+        }
+      }
+      state.modalReturnFocus = null;
+    }
     if (modal === refs.templateModal) {
       clearLibraryDragState();
     }
@@ -2509,8 +3451,10 @@
   }
 
   function roundForOverlay(value, event) {
-    if (event && event.altKey) return Math.round(value);
-    return Math.round(value / OVERLAY_SNAP_PX) * OVERLAY_SNAP_PX;
+    const snapEnabled = Boolean(state.draft?.layers?.snap?.enabled);
+    const snapSize = Math.max(1, Number(state.draft?.layers?.snap?.size || OVERLAY_SNAP_PX));
+    if ((event && event.altKey) || !snapEnabled) return Math.round(value);
+    return Math.round(value / snapSize) * snapSize;
   }
 
   function beginOverlayInteraction(event, layerKey, type, handleDir = "") {
@@ -2551,7 +3495,11 @@
     pushHistorySnapshot();
     state.historyFuture = [];
 
-    state.selectedLayerKey = layerKey;
+    if (isLayerSelected(layerKey)) {
+      state.selectedLayerKey = layerKey;
+    } else {
+      setSingleLayerSelection(layerKey);
+    }
     state.overlayInteraction = {
       key: layerKey,
       type,
@@ -2690,28 +3638,32 @@
     overlay.innerHTML = "";
     const layers = getLayers();
 
+    const selectedRects = [];
     layers.forEach((layer) => {
       const rect = toOverlayRect(layer);
       if (!rect) return;
 
       const item = document.createElement("div");
-      const isSelected = layer.key === state.selectedLayerKey;
+      const isSelected = isLayerSelected(layer.key);
+      const isPrimarySelected = layer.key === state.selectedLayerKey;
       item.className = `overlay-item${isSelected ? " is-selected" : ""}${
         layer.visible === "ON" ? "" : " is-hidden"
-      }${rect.mode === "flow" ? " is-flow" : ""}`;
+      }${rect.mode === "flow" ? " is-flow" : ""}${isPrimarySelected ? " is-primary" : ""}`;
       item.setAttribute("data-layer-key", layer.key);
       item.style.left = `${rect.x}px`;
       item.style.top = `${rect.y}px`;
       item.style.width = `${rect.w}px`;
       item.style.height = `${rect.h}px`;
-      item.style.cursor = isSelected ? "move" : "pointer";
+      item.style.cursor = isPrimarySelected ? "move" : "pointer";
+
+      if (isSelected) selectedRects.push(rect);
 
       const label = document.createElement("div");
       label.className = "overlay-label";
       label.textContent = `${layer.label} · ${rect.mode}`;
       item.appendChild(label);
 
-      if (isSelected) {
+      if (isPrimarySelected) {
         ["nw", "ne", "sw", "se", "n", "s", "e", "w"].forEach((dir) => {
           const handle = document.createElement("div");
           handle.className = "overlay-handle";
@@ -2728,12 +3680,35 @@
 
       item.addEventListener("click", (event) => {
         event.stopPropagation();
-        state.selectedLayerKey = layer.key;
+        if (event.metaKey || event.ctrlKey || event.shiftKey) {
+          toggleLayerSelection(layer.key);
+        } else {
+          setSingleLayerSelection(layer.key);
+        }
         renderAll();
       });
 
       overlay.appendChild(item);
     });
+
+    if (selectedRects.length > 1) {
+      const bounds = selectedRects.reduce(
+        (acc, rect) => ({
+          left: Math.min(acc.left, rect.x),
+          top: Math.min(acc.top, rect.y),
+          right: Math.max(acc.right, rect.x + rect.w),
+          bottom: Math.max(acc.bottom, rect.y + rect.h)
+        }),
+        { left: Number.POSITIVE_INFINITY, top: Number.POSITIVE_INFINITY, right: Number.NEGATIVE_INFINITY, bottom: Number.NEGATIVE_INFINITY }
+      );
+      const guide = document.createElement("div");
+      guide.className = "overlay-group-guide";
+      guide.style.left = `${bounds.left}px`;
+      guide.style.top = `${bounds.top}px`;
+      guide.style.width = `${Math.max(1, bounds.right - bounds.left)}px`;
+      guide.style.height = `${Math.max(1, bounds.bottom - bounds.top)}px`;
+      overlay.appendChild(guide);
+    }
   }
 
   function queueOverlayRender(options = {}) {
@@ -2804,7 +3779,9 @@
     const localX = frameX - (metrics.mainLeft - metrics.scrollX);
     const localY = frameY - (metrics.mainTop - metrics.scrollY);
     const size = defaultBlockSizeForEntry(entry);
-    const snap = event && event.altKey ? 1 : OVERLAY_SNAP_PX;
+    const snapEnabled = Boolean(state.draft?.layers?.snap?.enabled);
+    const snapSize = Math.max(1, Number(state.draft?.layers?.snap?.size || OVERLAY_SNAP_PX));
+    const snap = event && event.altKey ? 1 : snapEnabled ? snapSize : 1;
     const snapRound = (value) => Math.round(value / snap) * snap;
     const freeX = clamp(snapRound(localX - size.width / 2), -5000, 12000);
     const freeY = clamp(snapRound(localY - size.height / 2), -5000, 24000);
@@ -2904,17 +3881,173 @@
       value = value ? "ON" : "OFF";
     }
 
-    const next = clone(state.draft);
-    setPathValue(next, path, value);
+    let next = clone(state.draft);
+    if (path.startsWith("pageToggles.")) {
+      setPathValue(next, path, value);
+      const pageKey = path.replace("pageToggles.", "");
+      if (next.pages && Object.prototype.hasOwnProperty.call(next.pages, pageKey)) {
+        next = api.setPageSeo(next, pageKey, {
+          enabled: value === "ON"
+        });
+      }
+    } else if (path === "designTokens.reducedMotion") {
+      next = api.setReducedMotion(next, value);
+    } else {
+      setPathValue(next, path, value);
+    }
     applyDraft(next, "Global settings updated.");
+    if (
+      path === "content.opening.singleIntroEmbedUrl" ||
+      path === "content.opening.backgroundEmbedUrl" ||
+      path === "content.opening.introQualityTarget" ||
+      path === "content.opening.backgroundQualityTarget"
+    ) {
+      syncYoutubeResolutionControls({ immediate: true });
+    }
     touchSession();
   }
 
-  function handleLayerAction(action, layerKey, source = "layer") {
+  function resolveFreeStyleForNudge(style) {
+    const source = style && typeof style === "object" ? style : {};
+    const maxWidth = Math.min(1800, Math.max(300, Number(source.maxWidth || 860)));
+    return {
+      layoutMode: "free",
+      freeX: Number(source.freeX || 0),
+      freeY: Number(source.freeY || 0),
+      freeW: Number(source.freeW || 0) > 0 ? Number(source.freeW) : maxWidth,
+      freeH: Number(source.freeH || 0) > 0 ? Number(source.freeH) : 220
+    };
+  }
+
+  function nudgeSelectedLayers(dx, dy, event = null) {
+    const keys = selectedLayerKeysForTools();
+    if (!keys.length || state.selectedPage !== "home") return false;
+
+    const snapEnabled = Boolean(state.draft?.layers?.snap?.enabled);
+    const snapSize = Math.max(1, Number(state.draft?.layers?.snap?.size || OVERLAY_SNAP_PX));
+    const baseStep = snapEnabled ? snapSize : 1;
+    const multiplier = event && event.shiftKey ? 10 : 1;
+    const step = baseStep * multiplier;
+    const deltaX = Math.round(dx * step);
+    const deltaY = Math.round(dy * step);
+
+    let next = clone(state.draft);
+    keys.forEach((key) => {
+      const currentStyle = getPathValue(next, `layout.sectionStyles.${key}`) || {};
+      const freeStyle = resolveFreeStyleForNudge(currentStyle);
+      next = api.setSectionStyle(next, key, {
+        ...freeStyle,
+        layoutMode: "free",
+        freeX: clamp(Math.round(freeStyle.freeX + deltaX), -5000, 12000),
+        freeY: clamp(Math.round(freeStyle.freeY + deltaY), -5000, 24000)
+      });
+    });
+
+    state.selectedLayerKeys = [...keys];
+    state.selectedLayerKey = keys[keys.length - 1];
+    applyDraft(next, `Nudged ${keys.length} layer(s).`, { trackHistory: false });
+    return true;
+  }
+
+  function handleLayerToolAction(action) {
+    const keys = selectedLayerKeysForTools();
+    if (!keys.length) {
+      setStatus("Select at least one layer.", "warn");
+      return;
+    }
+
+    if (action === "align-left" || action === "align-center" || action === "align-right") {
+      if (keys.length < 2) {
+        setStatus("Select at least two layers for align.", "warn");
+        return;
+      }
+      const direction = action.replace("align-", "");
+      const next = api.applyAlignment(state.draft, keys, direction);
+      state.selectedLayerKeys = [...keys];
+      state.selectedLayerKey = keys[keys.length - 1];
+      applyDraft(next, `Aligned ${keys.length} layers (${direction}).`);
+      return;
+    }
+
+    if (action === "distribute-x" || action === "distribute-y") {
+      if (keys.length < 3) {
+        setStatus("Select at least three layers for distribute.", "warn");
+        return;
+      }
+      const axis = action.endsWith("y") ? "y" : "x";
+      const next = api.applyDistribution(state.draft, keys, axis);
+      state.selectedLayerKeys = [...keys];
+      state.selectedLayerKey = keys[keys.length - 1];
+      applyDraft(next, `Distributed ${keys.length} layers (${axis.toUpperCase()}).`);
+      return;
+    }
+
+    if (action === "toggle-snap") {
+      const enabled = !Boolean(state.draft?.layers?.snap?.enabled);
+      const next = api.setSnap(state.draft, { enabled });
+      applyDraft(next, `Snap ${enabled ? "enabled" : "disabled"}.`, { trackHistory: false });
+      return;
+    }
+  }
+
+  function handleSeoControlsChange() {
+    const pageKey = resolveSeoPageKey();
+    const next = api.setPageSeo(state.draft, pageKey, {
+      title: refs.seoTitleInput ? refs.seoTitleInput.value : "",
+      description: refs.seoDescriptionInput ? refs.seoDescriptionInput.value : "",
+      canonical: refs.seoCanonicalInput ? refs.seoCanonicalInput.value : ""
+    });
+    applyDraft(next, "SEO settings updated.", { trackHistory: false });
+  }
+
+  async function rollbackPublished() {
+    const confirmed = window.confirm("Rollback to the previous published snapshot and push live?");
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch("/__studio/rollback-published", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          commitMessage: `Studio rollback ${new Date().toISOString().replace("T", " ").slice(0, 19)}`
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      appendPublishReport("Rollback requested.", payload);
+      if (!response.ok || payload.ok === false) {
+        setStatus(`Rollback failed: ${payload.error || `HTTP ${response.status}`}`, "error");
+        return;
+      }
+
+      syncPublishedSettings();
+      syncDraftSettings();
+      renderAll();
+      if (payload.git_pushed) {
+        const commitRef =
+          payload.commit && payload.branch ? `${payload.branch}@${payload.commit}` : payload.commit || "latest";
+        setStatus(`Rollback complete. Git pushed (${commitRef}).`, "ok");
+      } else {
+        setStatus(
+          `Rollback saved locally, but push failed: ${payload.error || "check Git auth and branch protection."}`,
+          "warn"
+        );
+      }
+    } catch (err) {
+      setStatus(`Rollback request failed (${err?.message || "request error"}).`, "error");
+    }
+  }
+
+  function handleLayerAction(action, layerKey, source = "layer", options = {}) {
     if (!layerKey) return;
 
     if (action === "select") {
-      state.selectedLayerKey = layerKey;
+      if (options.multiSelect) {
+        toggleLayerSelection(layerKey);
+      } else {
+        setSingleLayerSelection(layerKey);
+      }
       renderAll();
       return;
     }
@@ -2941,7 +4074,11 @@
       const next = api.duplicateCustomBlock(state.draft, layerKey);
       const afterLayers = api.getSectionCatalog(next);
       const newLayer = afterLayers.find((layer) => !beforeKeys.has(layer.key));
-      state.selectedLayerKey = newLayer ? newLayer.key : layerKey;
+      if (newLayer && newLayer.key) {
+        setSingleLayerSelection(newLayer.key);
+      } else {
+        setSingleLayerSelection(layerKey);
+      }
       applyDraft(next, "Section duplicated.");
       return;
     }
@@ -2952,6 +4089,7 @@
       if (!ok) return;
       const next = api.deleteCustomBlock(state.draft, layerKey);
       state.selectedLayerKey = null;
+      state.selectedLayerKeys = [];
       applyDraft(next, "Section deleted.");
       return;
     }
@@ -3069,23 +4207,27 @@
     applyDraft(next, "Project updated.", { trackHistory: false });
   }
 
-  function applyMediaToTarget(target, url) {
+  function applyMediaToTarget(target, url, mediaId = "") {
     if (!target) {
       setStatus("Select a media target first (click a Library button beside a field).", "warn");
       return;
     }
 
     let next = clone(state.draft);
+    const withUsage = (draft) => {
+      if (!mediaId) return draft;
+      return api.recordMediaUsage(draft, mediaId);
+    };
 
     if (target === "superSyd:teaserEmbedUrl") {
       next.content.superSyd.teaserEmbedUrl = url;
-      applyDraft(next, "Media assigned to teaser.");
+      applyDraft(withUsage(next), "Media assigned to teaser.");
       return;
     }
 
     if (target === "superSyd:previsEmbedUrl") {
       next.content.superSyd.previsEmbedUrl = url;
-      applyDraft(next, "Media assigned to previs.");
+      applyDraft(withUsage(next), "Media assigned to previs.");
       return;
     }
 
@@ -3095,7 +4237,7 @@
       const key = parts[2];
       if (!Number.isInteger(index) || !key || !next.content.projects[index]) return;
       next.content.projects[index][key] = url;
-      applyDraft(next, "Media assigned to project.");
+      applyDraft(withUsage(next), "Media assigned to project.");
       return;
     }
 
@@ -3105,13 +4247,14 @@
       const key = parts[2];
       if (!blockId || !key) return;
       next = api.updateCustomBlock(next, blockId, { content: { [key]: url } });
-      applyDraft(next, "Media assigned to section.");
+      applyDraft(withUsage(next), "Media assigned to section.");
       return;
     }
   }
 
   function openMediaManager(target = null) {
     state.mediaTarget = target || state.mediaTarget;
+    if (refs.mediaSearchInput) refs.mediaSearchInput.value = state.mediaSearch || "";
     renderMediaList();
     openModal(refs.mediaModal);
     if (state.mediaTarget) {
@@ -3123,33 +4266,153 @@
     const label = String(refs.mediaLabelInput.value || "").trim();
     const url = String(refs.mediaUrlInput.value || "").trim();
     const type = String(refs.mediaTypeInput.value || "image").trim();
+    const alt = String(refs.mediaAltInput?.value || "").trim();
+    const favorite = Boolean(refs.mediaFavoriteInput?.checked);
 
     if (!label || !url) {
       setStatus("Media label and URL are required.", "error");
       return;
     }
+    if (type === "image" && !alt) {
+      setStatus("Image media should include alt/description text.", "warn");
+    }
 
     const id = `${type}-${Date.now().toString(36)}`;
-    const next = api.upsertMediaItem(state.draft, { id, label, url, type });
+    const next = api.upsertMediaItem(state.draft, { id, label, url, type, alt, favorite });
     applyDraft(next, "Media item added.");
 
     refs.mediaLabelInput.value = "";
     refs.mediaUrlInput.value = "";
     refs.mediaTypeInput.value = "image";
+    if (refs.mediaAltInput) refs.mediaAltInput.value = "";
+    if (refs.mediaFavoriteInput) refs.mediaFavoriteInput.checked = false;
   }
 
-  function publishDraft() {
-    const confirmed = window.confirm("Publish current draft settings to live site now?");
+  function summarizePublishedFiles(payload) {
+    if (!payload || !Array.isArray(payload.files) || !payload.files.length) {
+      return "settings files";
+    }
+    return payload.files.join(", ");
+  }
+
+  function summarizeNoindex(payload) {
+    if (!payload || !Array.isArray(payload.noindex)) return "";
+    const totalNoindex = payload.noindex.filter((item) => item && item.noindex).length;
+    return `Noindex pages: ${totalNoindex}.`;
+  }
+
+  function summarizeValidationIssues(validation) {
+    if (!validation || typeof validation !== "object") return "";
+    const errors = Array.isArray(validation.errors) ? validation.errors : [];
+    const warnings = Array.isArray(validation.warnings) ? validation.warnings : [];
+    const formatIssue = (issue) => {
+      if (!issue || typeof issue !== "object") return "";
+      const path = issue.path ? `${issue.path}: ` : "";
+      return `${path}${issue.message || issue.code || "Unknown issue"}`.trim();
+    };
+    const errorPreview = errors.slice(0, 3).map(formatIssue).filter(Boolean).join(" | ");
+    const warningCount = warnings.length;
+    if (errors.length) {
+      return `Validation errors (${errors.length})${errorPreview ? `: ${errorPreview}` : "."}`;
+    }
+    if (warningCount) {
+      return `Validation warnings: ${warningCount}.`;
+    }
+    return "";
+  }
+
+  async function runValidationPreflight(settings, contextLabel) {
+    try {
+      const response = await fetch("/__studio/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ settings })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || payload.ok === false) {
+        const summary = summarizeValidationIssues(payload) || payload.error || `HTTP ${response.status}`;
+        setStatus(`${contextLabel} blocked. ${summary}`, "error");
+        appendPublishReport(`${contextLabel} preflight blocked.`, payload);
+        return { ok: false, payload };
+      }
+
+      const warningCount = Array.isArray(payload.warnings) ? payload.warnings.length : 0;
+      if (warningCount > 0) {
+        setStatus(`${contextLabel} preflight passed with ${warningCount} warning(s).`, "warn");
+        appendPublishReport(`${contextLabel} preflight passed with warnings.`, payload);
+      } else {
+        appendPublishReport(`${contextLabel} preflight passed.`, payload);
+      }
+      return { ok: true, payload };
+    } catch (err) {
+      setStatus(
+        `${contextLabel} preflight unavailable (local validation endpoint not reachable). Continuing with server-side validation.`,
+        "warn"
+      );
+      appendPublishReport(`${contextLabel} preflight unavailable.`, { error: String(err?.message || err || "") });
+      return { ok: true, skipped: true };
+    }
+  }
+
+  async function publishDraft() {
+    const confirmed = window.confirm(
+      "Publish live now? This writes files to folder and pushes to GitHub (origin/main)."
+    );
     if (!confirmed) return;
 
-    saveDraftImmediately("Draft saved before publish.");
+    saveDraftImmediately("Draft saved before live publish.");
     const published = api.publishDraft(state.draft);
     state.published = clone(published);
     state.draft = clone(published);
     state.historyPast = [];
     state.historyFuture = [];
     renderAll();
-    setStatus("Draft published to live settings.", "ok");
+
+    try {
+      const preflight = await runValidationPreflight(published, "Live publish");
+      if (!preflight.ok) return;
+
+      const response = await fetch("/__studio/publish-live", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          settings: published,
+          commitMessage: `Studio live publish ${new Date().toISOString().replace("T", " ").slice(0, 19)}`
+        })
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false) {
+        const validationSummary = summarizeValidationIssues(payload.validation || payload);
+        throw new Error(validationSummary || payload.error || `HTTP ${response.status}`);
+      }
+      appendPublishReport("Live publish response.", payload);
+
+      const files = summarizePublishedFiles(payload);
+      const noindexSummary = summarizeNoindex(payload);
+
+      if (payload.git_pushed) {
+        const commitRef =
+          payload.commit && payload.branch ? `${payload.branch}@${payload.commit}` : payload.commit || "latest";
+        setStatus(`Live publish complete. Saved ${files}. ${noindexSummary} Git pushed (${commitRef}).`, "ok");
+      } else {
+        setStatus(
+          `Saved to folder (${files}). ${noindexSummary} Git push failed: ${payload.error || "check Git auth."}`,
+          "warn"
+        );
+      }
+    } catch (err) {
+      appendPublishReport("Live publish failed.", { error: String(err?.message || err || "") });
+      setStatus(
+        `Published in browser only. Start local server with: python3 serve_with_cors.py, then retry Publish Live. (${err?.message || "request failed"})`,
+        "warn"
+      );
+    }
   }
 
   async function publishDraftToFolder() {
@@ -3167,6 +4430,9 @@
     renderAll();
 
     try {
+      const preflight = await runValidationPreflight(published, "Folder publish");
+      if (!preflight.ok) return;
+
       const response = await fetch("/__studio/publish", {
         method: "POST",
         headers: {
@@ -3175,17 +4441,18 @@
         body: JSON.stringify({ settings: published })
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
       const payload = await response.json().catch(() => ({}));
-      const files = Array.isArray(payload.files) && payload.files.length
-        ? payload.files.join(", ")
-        : "settings files";
+      if (!response.ok || payload.ok === false) {
+        const validationSummary = summarizeValidationIssues(payload.validation || payload);
+        throw new Error(validationSummary || payload.error || `HTTP ${response.status}`);
+      }
+      appendPublishReport("Folder publish response.", payload);
 
-      setStatus(`Published to folder: ${files}. Commit and push to deploy.`, "ok");
-    } catch (_err) {
+      const files = summarizePublishedFiles(payload);
+      const noindexSummary = summarizeNoindex(payload);
+      setStatus(`Published to folder: ${files}. ${noindexSummary} Commit and push to deploy.`, "ok");
+    } catch (err) {
+      appendPublishReport("Folder publish failed.", { error: String(err?.message || err || "") });
       setStatus(
         "Published in browser only. Start local server with: python3 serve_with_cors.py, then retry Publish to Folder.",
         "warn"
@@ -3204,6 +4471,7 @@
     state.historyFuture = [];
     state.pendingAutosave = false;
     state.autosaveAt = now();
+    state.selectedLayerKeys = [];
     renderAll();
     refreshPreview();
     setStatus("Draft discarded. Back to published settings.", "ok");
@@ -3373,6 +4641,7 @@
     syncDraftSettings();
     ensureSelectedLayer();
     state.uiLayout = loadUILayout();
+    state.activeInspectorTab = loadInspectorTab();
 
     showPanel("editor");
     applyUILayout();
@@ -3455,6 +4724,11 @@
       const nextPage = button.getAttribute("data-page-key");
       if (!nextPage) return;
       state.selectedPage = nextPage;
+      if (nextPage !== "home") {
+        state.selectedLayerKeys = [];
+      } else {
+        ensureSelectedLayer();
+      }
       renderAll();
       touchSession();
     });
@@ -3465,7 +4739,9 @@
       const layerKey = item.getAttribute("data-layer-key");
       const actionButton = event.target.closest("[data-action]");
       const action = actionButton ? actionButton.getAttribute("data-action") : "select";
-      handleLayerAction(action, layerKey, "layer");
+      handleLayerAction(action, layerKey, "layer", {
+        multiSelect: action === "select" && (event.metaKey || event.ctrlKey || event.shiftKey)
+      });
       touchSession();
     });
 
@@ -3484,7 +4760,9 @@
       const layerKey = card.getAttribute("data-layer-key");
       const actionButton = event.target.closest("[data-action]");
       const action = actionButton ? actionButton.getAttribute("data-action") : "select";
-      handleLayerAction(action, layerKey, "canvas");
+      handleLayerAction(action, layerKey, "canvas", {
+        multiSelect: action === "select" && (event.metaKey || event.ctrlKey || event.shiftKey)
+      });
       touchSession();
     });
 
@@ -3498,6 +4776,58 @@
     });
 
     refs.globalControls.addEventListener("change", handleGlobalControlChange);
+    if (refs.editorDensitySelect) {
+      refs.editorDensitySelect.addEventListener("change", () => {
+        const next = api.setEditorDensity(state.draft, refs.editorDensitySelect.value || "comfortable");
+        applyDraft(next, "Editor density updated.", { trackHistory: false });
+        touchSession();
+      });
+    }
+
+    getInspectorTabButtons().forEach((button) => {
+      button.addEventListener("click", () => {
+        const tab = button.getAttribute("data-inspector-tab-btn");
+        setInspectorTab(tab);
+        touchSession();
+      });
+      button.addEventListener("keydown", (event) => {
+        const buttons = getInspectorTabButtons();
+        const index = buttons.indexOf(button);
+        if (index < 0) return;
+        if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+          event.preventDefault();
+          const delta = event.key === "ArrowRight" ? 1 : -1;
+          const nextButton = buttons[(index + delta + buttons.length) % buttons.length];
+          if (!nextButton) return;
+          const tab = nextButton.getAttribute("data-inspector-tab-btn");
+          setInspectorTab(tab, { focusButton: true });
+          touchSession();
+        }
+      });
+    });
+    if (refs.introSingleUrlInput) {
+      refs.introSingleUrlInput.addEventListener("input", () => {
+        requestYoutubeResolutionProbe("intro", {
+          url: refs.introSingleUrlInput.value,
+          immediate: false
+        });
+      });
+    }
+    if (refs.backgroundVideoUrlInput) {
+      refs.backgroundVideoUrlInput.addEventListener("input", () => {
+        requestYoutubeResolutionProbe("background", {
+          url: refs.backgroundVideoUrlInput.value,
+          immediate: false
+        });
+      });
+    }
+    if (refs.refreshYoutubeResolutionsBtn) {
+      refs.refreshYoutubeResolutionsBtn.addEventListener("click", () => {
+        syncYoutubeResolutionControls({ force: true, immediate: true });
+        setStatus("YouTube resolutions refreshed.", "ok");
+        touchSession();
+      });
+    }
 
     refs.layerControls.addEventListener("change", (event) => {
       const actionButton = event.target.closest("[data-action]");
@@ -3553,7 +4883,36 @@
       else refs.projectsEditor.insertBefore(dragging, after);
     });
 
+    if (refs.seoTitleInput) {
+      refs.seoTitleInput.addEventListener("input", () => {
+        handleSeoControlsChange();
+        touchSession();
+      });
+    }
+    if (refs.seoDescriptionInput) {
+      refs.seoDescriptionInput.addEventListener("input", () => {
+        handleSeoControlsChange();
+        touchSession();
+      });
+    }
+    if (refs.seoCanonicalInput) {
+      refs.seoCanonicalInput.addEventListener("input", () => {
+        handleSeoControlsChange();
+        touchSession();
+      });
+    }
+
     refs.templateList.addEventListener("click", (event) => {
+      const favoriteButton = event.target.closest('[data-action="library-favorite"]');
+      if (favoriteButton) {
+        const id = favoriteButton.getAttribute("data-library-id");
+        const current = Boolean(state.draft?.library?.favoriteTemplateIds?.includes(id));
+        const next = api.setTemplateFavorite(state.draft, id, !current);
+        applyDraft(next, !current ? "Template favorited." : "Template unfavorited.", { trackHistory: false });
+        touchSession();
+        return;
+      }
+
       const button = event.target.closest('[data-action="library-add"]');
       if (button) {
         const id = button.getAttribute("data-library-id");
@@ -3605,7 +4964,15 @@
 
       const action = button.getAttribute("data-action");
       if (action === "use-media") {
-        applyMediaToTarget(state.mediaTarget, media.url);
+        applyMediaToTarget(state.mediaTarget, media.url, media.id);
+      }
+
+      if (action === "toggle-favorite") {
+        const next = api.upsertMediaItem(state.draft, {
+          ...media,
+          favorite: !media.favorite
+        });
+        applyDraft(next, !media.favorite ? "Media favorited." : "Media unfavorited.", { trackHistory: false });
       }
 
       if (action === "copy-media") {
@@ -3676,6 +5043,14 @@
       touchSession();
     });
 
+    if (refs.mediaSearchInput) {
+      refs.mediaSearchInput.addEventListener("input", () => {
+        state.mediaSearch = refs.mediaSearchInput.value || "";
+        renderMediaList();
+        touchSession();
+      });
+    }
+
     refs.libraryCategoryFilter.addEventListener("change", () => {
       state.libraryCategory = refs.libraryCategoryFilter.value || "all";
       renderTemplateList();
@@ -3696,6 +5071,43 @@
       setLibraryMode("assets");
       touchSession();
     });
+
+    if (refs.alignLeftBtn) {
+      refs.alignLeftBtn.addEventListener("click", () => {
+        handleLayerToolAction("align-left");
+        touchSession();
+      });
+    }
+    if (refs.alignCenterBtn) {
+      refs.alignCenterBtn.addEventListener("click", () => {
+        handleLayerToolAction("align-center");
+        touchSession();
+      });
+    }
+    if (refs.alignRightBtn) {
+      refs.alignRightBtn.addEventListener("click", () => {
+        handleLayerToolAction("align-right");
+        touchSession();
+      });
+    }
+    if (refs.distributeXBtn) {
+      refs.distributeXBtn.addEventListener("click", () => {
+        handleLayerToolAction("distribute-x");
+        touchSession();
+      });
+    }
+    if (refs.distributeYBtn) {
+      refs.distributeYBtn.addEventListener("click", () => {
+        handleLayerToolAction("distribute-y");
+        touchSession();
+      });
+    }
+    if (refs.toggleSnapBtn) {
+      refs.toggleSnapBtn.addEventListener("click", () => {
+        handleLayerToolAction("toggle-snap");
+        touchSession();
+      });
+    }
 
     byId("quick-add-hero").addEventListener("click", () => {
       addLibraryEntryById("hero-cinematic");
@@ -3829,8 +5241,8 @@
       touchSession();
     });
 
-    byId("publish-draft").addEventListener("click", () => {
-      publishDraft();
+    byId("publish-draft").addEventListener("click", async () => {
+      await publishDraft();
       touchSession();
     });
 
@@ -3838,6 +5250,13 @@
     if (publishFolderBtn) {
       publishFolderBtn.addEventListener("click", async () => {
         await publishDraftToFolder();
+        touchSession();
+      });
+    }
+
+    if (refs.rollbackPublishedBtn) {
+      refs.rollbackPublishedBtn.addEventListener("click", async () => {
+        await rollbackPublished();
         touchSession();
       });
     }
@@ -3883,6 +5302,37 @@
     });
 
     document.addEventListener("keydown", (event) => {
+      const target = event.target;
+      const isTypingTarget =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      if (!isTypingTarget && !state.modalStack.length && !event.metaKey && !event.ctrlKey) {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          if (nudgeSelectedLayers(-1, 0, event)) touchSession();
+          return;
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          if (nudgeSelectedLayers(1, 0, event)) touchSession();
+          return;
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          if (nudgeSelectedLayers(0, -1, event)) touchSession();
+          return;
+        }
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          if (nudgeSelectedLayers(0, 1, event)) touchSession();
+          return;
+        }
+      }
+
       const meta = event.metaKey || event.ctrlKey;
       if (!meta) return;
 

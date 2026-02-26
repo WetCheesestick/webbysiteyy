@@ -13,6 +13,44 @@
   };
 
   const HOME_BASE_SECTION_KEYS = Object.keys(HOME_BASE_SECTION_LABELS);
+  const VIDEO_QUALITY_LEVELS = [
+    "auto",
+    "tiny",
+    "small",
+    "medium",
+    "large",
+    "hd720",
+    "hd1080",
+    "hd1440",
+    "hd2160",
+    "hd2880",
+    "highres"
+  ];
+  const VIDEO_QUALITY_ALIAS_MAP = {
+    auto: "auto",
+    tiny: "tiny",
+    "144p": "tiny",
+    small: "small",
+    "240p": "small",
+    medium: "medium",
+    "360p": "medium",
+    large: "large",
+    "480p": "large",
+    hd720: "hd720",
+    "720p": "hd720",
+    hd1080: "hd1080",
+    "1080p": "hd1080",
+    hd1440: "hd1440",
+    "1440p": "hd1440",
+    "2k": "hd1440",
+    hd2160: "hd2160",
+    "2160p": "hd2160",
+    "4k": "hd2160",
+    hd2880: "hd2880",
+    "2880p": "hd2880",
+    "5k": "hd2880",
+    highres: "highres"
+  };
 
   const PAGE_KEY_BY_FILE = {
     "projects.html": "projects",
@@ -126,20 +164,119 @@
   };
 
   const DEFAULT_SETTINGS = {
-    version: 2,
+    schemaVersion: 3,
+    version: 3,
+    document: {
+      title: "Julian Schnitt",
+      description: "Cinematography portfolio and studio-managed project pages.",
+      updatedAtUtc: ""
+    },
     theme: "LIGHT",
+    videoQualityTarget: "hd1080",
+    designTokens: {
+      editorDensity: "comfortable",
+      reducedMotion: "OFF",
+      surfaceStyle: "editorial"
+    },
+    layers: {
+      selectionMode: "single",
+      defaultLayoutMode: "flow",
+      snap: {
+        enabled: true,
+        size: 8
+      }
+    },
+    publishing: {
+      lastPublishedAtUtc: "",
+      lastCommit: "",
+      lastStatus: "idle",
+      lastError: ""
+    },
     featureToggles: {
       works_section_under_super_syd: "ON",
       works_section_3d_poster_mode: "ON",
       opening_single_intro_mode: "OFF"
     },
     pageToggles: {
+      index: "ON",
       projects: "OFF",
       about: "OFF",
       privacy: "OFF",
       project_aastry: "OFF",
       project_crimson_ring: "OFF",
       project_super_syd: "OFF"
+    },
+    pages: {
+      index: {
+        label: "Home",
+        enabled: true,
+        seo: {
+          title: "Julian Schnitt",
+          description: "Cinematography portfolio.",
+          canonical: "https://julianschnitt.com/",
+          noindex: false
+        }
+      },
+      projects: {
+        label: "Projects",
+        enabled: false,
+        seo: {
+          title: "Projects | Julian Schnitt",
+          description: "Selected cinematography projects.",
+          canonical: "https://julianschnitt.com/projects.html",
+          noindex: true
+        }
+      },
+      about: {
+        label: "About",
+        enabled: false,
+        seo: {
+          title: "About | Julian Schnitt",
+          description: "About Julian Schnitt.",
+          canonical: "https://julianschnitt.com/about.html",
+          noindex: true
+        }
+      },
+      privacy: {
+        label: "Privacy",
+        enabled: false,
+        seo: {
+          title: "Privacy Policy | Julian Schnitt",
+          description: "Privacy policy.",
+          canonical: "https://julianschnitt.com/privacy-policy.html",
+          noindex: true
+        }
+      },
+      project_aastry: {
+        label: "Project Aastry",
+        enabled: false,
+        seo: {
+          title: "Aastry | Julian Schnitt",
+          description: "Aastry film project details.",
+          canonical: "https://julianschnitt.com/project-aastry.html",
+          noindex: true
+        }
+      },
+      project_crimson_ring: {
+        label: "Project Crimson Ring",
+        enabled: false,
+        seo: {
+          title: "Crimson Ring | Julian Schnitt",
+          description: "Crimson Ring film project details.",
+          canonical: "https://julianschnitt.com/project-crimson-ring.html",
+          noindex: true
+        }
+      },
+      project_super_syd: {
+        label: "Project Super Syd",
+        enabled: false,
+        seo: {
+          title: "Super Syd | Julian Schnitt",
+          description: "Super Syd film project details.",
+          canonical: "https://julianschnitt.com/project-super-syd.html",
+          noindex: true
+        }
+      }
     },
     layout: {
       homeSectionOrder: [...HOME_BASE_SECTION_KEYS],
@@ -184,7 +321,9 @@
       },
       opening: {
         singleIntroEmbedUrl: "https://youtu.be/XJsnuIRlA9k",
-        backgroundEmbedUrl: "https://youtu.be/zDLFZ_0GTLg"
+        backgroundEmbedUrl: "https://youtu.be/zDLFZ_0GTLg",
+        introQualityTarget: "hd1080",
+        backgroundQualityTarget: "hd1080"
       },
       projects: [
         {
@@ -219,42 +358,82 @@
         }
       ]
     },
+    library: {
+      recentTemplateIds: [],
+      favoriteTemplateIds: []
+    },
     mediaLibrary: [
       {
         id: "media_opening_1",
         type: "video",
         label: "Opening 1 (YouTube)",
-        url: "https://youtu.be/JaXuggpCLs8"
+        url: "https://youtu.be/JaXuggpCLs8",
+        alt: "",
+        favorite: false,
+        createdAtUtc: "",
+        updatedAtUtc: "",
+        lastUsedAtUtc: "",
+        usageCount: 0
       },
       {
         id: "media_opening_2",
         type: "video",
         label: "Opening 2 (YouTube)",
-        url: "https://youtu.be/fsxOK0UAhko"
+        url: "https://youtu.be/fsxOK0UAhko",
+        alt: "",
+        favorite: false,
+        createdAtUtc: "",
+        updatedAtUtc: "",
+        lastUsedAtUtc: "",
+        usageCount: 0
       },
       {
         id: "media_opening_3",
         type: "video",
         label: "Opening 3 (YouTube)",
-        url: "https://youtu.be/_HPmOGqlu_0"
+        url: "https://youtu.be/_HPmOGqlu_0",
+        alt: "",
+        favorite: false,
+        createdAtUtc: "",
+        updatedAtUtc: "",
+        lastUsedAtUtc: "",
+        usageCount: 0
       },
       {
         id: "media_background",
         type: "video",
         label: "Background (YouTube)",
-        url: "https://youtu.be/zDLFZ_0GTLg"
+        url: "https://youtu.be/zDLFZ_0GTLg",
+        alt: "",
+        favorite: false,
+        createdAtUtc: "",
+        updatedAtUtc: "",
+        lastUsedAtUtc: "",
+        usageCount: 0
       },
       {
         id: "media_opening_single",
         type: "video",
         label: "Opening Single (YouTube)",
-        url: "https://youtu.be/XJsnuIRlA9k"
+        url: "https://youtu.be/XJsnuIRlA9k",
+        alt: "",
+        favorite: false,
+        createdAtUtc: "",
+        updatedAtUtc: "",
+        lastUsedAtUtc: "",
+        usageCount: 0
       },
       {
         id: "media_super_syd_poster",
         type: "image",
         label: "Super Syd Poster",
-        url: "assets/images/super_syd_canva.png"
+        url: "assets/images/super_syd_canva.png",
+        alt: "Super Syd poster",
+        favorite: false,
+        createdAtUtc: "",
+        updatedAtUtc: "",
+        lastUsedAtUtc: "",
+        usageCount: 0
       }
     ]
   };
@@ -296,10 +475,38 @@
     return String(value || fallback).toUpperCase() === "DARK" ? "DARK" : "LIGHT";
   }
 
+  function normalizeVideoQualityTarget(value, fallback = "hd1080") {
+    const normalizeToken = (input) => {
+      const clean = String(input || "").trim().toLowerCase();
+      if (!clean) return "";
+      if (VIDEO_QUALITY_ALIAS_MAP[clean]) return VIDEO_QUALITY_ALIAS_MAP[clean];
+      if (VIDEO_QUALITY_LEVELS.includes(clean)) return clean;
+      return "";
+    };
+
+    const normalized = normalizeToken(value);
+    if (normalized) return normalized;
+
+    const normalizedFallback = normalizeToken(fallback);
+    if (normalizedFallback) return normalizedFallback;
+
+    return "hd1080";
+  }
+
   function normalizeAlign(value, fallback = "left") {
     const clean = String(value || fallback).toLowerCase();
     if (clean === "center" || clean === "right") return clean;
     return "left";
+  }
+
+  function normalizeDensity(value, fallback = "comfortable") {
+    return String(value || fallback).toLowerCase() === "compact" ? "compact" : "comfortable";
+  }
+
+  function normalizeCount(value, fallback = 0) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return Math.max(0, Number(fallback) || 0);
+    return Math.max(0, Math.round(parsed));
   }
 
   function makeCustomKey(id) {
@@ -420,11 +627,39 @@
     const normalizedType = type === "video" ? "video" : "image";
     const label = normalizeText(source.label, `Media ${index + 1}`);
     const id = slugify(source.id || `${normalizedType}-${label}-${index + 1}`) || uid("media");
+    const legacyAlt = normalizeFreeText(source.alt, normalizeFreeText(source.description, ""));
     return {
       id,
       type: normalizedType,
       label,
-      url: normalizeFreeText(source.url, "")
+      url: normalizeFreeText(source.url, ""),
+      alt: normalizedType === "image" ? normalizeFreeText(legacyAlt, "") : "",
+      favorite: Boolean(source.favorite),
+      createdAtUtc: normalizeFreeText(source.createdAtUtc, ""),
+      updatedAtUtc: normalizeFreeText(source.updatedAtUtc, ""),
+      lastUsedAtUtc: normalizeFreeText(source.lastUsedAtUtc, ""),
+      usageCount: normalizeCount(source.usageCount, 0)
+    };
+  }
+
+  function normalizeLibraryState(rawLibrary, fallbackLibrary) {
+    const fallback = isObject(fallbackLibrary) ? fallbackLibrary : { recentTemplateIds: [], favoriteTemplateIds: [] };
+    const source = isObject(rawLibrary) ? rawLibrary : {};
+    const normalizeTemplateIds = (value, fallbackIds = []) => {
+      const seen = new Set();
+      const out = [];
+      const list = Array.isArray(value) ? value : fallbackIds;
+      list.forEach((item) => {
+        const token = normalizeFreeText(item, "");
+        if (!token || seen.has(token)) return;
+        seen.add(token);
+        out.push(token);
+      });
+      return out.slice(0, 64);
+    };
+    return {
+      recentTemplateIds: normalizeTemplateIds(source.recentTemplateIds, fallback.recentTemplateIds),
+      favoriteTemplateIds: normalizeTemplateIds(source.favoriteTemplateIds, fallback.favoriteTemplateIds)
     };
   }
 
@@ -485,13 +720,91 @@
     return out;
   }
 
+
+  function normalizeSeo(source, fallback) {
+    const base = isObject(fallback) ? fallback : { title: "", description: "", canonical: "", noindex: false };
+    const raw = isObject(source) ? source : {};
+    return {
+      title: normalizeText(raw.title, base.title || ""),
+      description: normalizeText(raw.description, base.description || ""),
+      canonical: normalizeFreeText(raw.canonical, base.canonical || ""),
+      noindex: Boolean(raw.noindex)
+    };
+  }
+
+  function normalizePageConfig(source, fallback, toggleFallback = null) {
+    const base = isObject(fallback)
+      ? fallback
+      : {
+          label: "Page",
+          enabled: true,
+          seo: { title: "", description: "", canonical: "", noindex: false }
+        };
+    const raw = isObject(source) ? source : {};
+    let enabled = raw.enabled;
+    if (typeof enabled !== "boolean") {
+      enabled = toggleFallback == null ? base.enabled : normalizeOnOff(toggleFallback, base.enabled ? "ON" : "OFF") === "ON";
+    }
+    const seo = normalizeSeo(raw.seo, base.seo);
+    seo.noindex = typeof raw?.seo?.noindex === "boolean" ? Boolean(raw.seo.noindex) : !enabled;
+    return {
+      label: normalizeText(raw.label, base.label),
+      enabled: Boolean(enabled),
+      seo
+    };
+  }
+
   function normalizeSettings(raw) {
     const defaults = clone(DEFAULT_SETTINGS);
     if (!isObject(raw)) return defaults;
 
     const out = clone(defaults);
-    out.version = 2;
+    out.schemaVersion = 3;
+    out.version = 3;
     out.theme = normalizeTheme(raw.theme, defaults.theme);
+    out.videoQualityTarget = normalizeVideoQualityTarget(raw.videoQualityTarget, defaults.videoQualityTarget);
+
+    if (isObject(raw.document)) {
+      out.document.title = normalizeText(raw.document.title, out.document.title);
+      out.document.description = normalizeText(raw.document.description, out.document.description);
+      out.document.updatedAtUtc = normalizeFreeText(raw.document.updatedAtUtc, out.document.updatedAtUtc);
+    }
+
+    if (isObject(raw.designTokens)) {
+      out.designTokens.editorDensity = normalizeDensity(
+        raw.designTokens.editorDensity,
+        out.designTokens.editorDensity
+      );
+      out.designTokens.reducedMotion = normalizeOnOff(raw.designTokens.reducedMotion, out.designTokens.reducedMotion);
+      out.designTokens.surfaceStyle = normalizeText(raw.designTokens.surfaceStyle, out.designTokens.surfaceStyle);
+    }
+
+    if (isObject(raw.layers)) {
+      out.layers.selectionMode = String(raw.layers.selectionMode || out.layers.selectionMode).toLowerCase() === "multi" ? "multi" : "single";
+      out.layers.defaultLayoutMode = String(raw.layers.defaultLayoutMode || out.layers.defaultLayoutMode).toLowerCase() === "free" ? "free" : "flow";
+      const snapRaw = isObject(raw.layers.snap) ? raw.layers.snap : {};
+      out.layers.snap.enabled = snapRaw.enabled === undefined ? Boolean(out.layers.snap.enabled) : Boolean(snapRaw.enabled);
+      out.layers.snap.size = normalizeNumber(snapRaw.size, out.layers.snap.size, 1, 64);
+    }
+
+    if (isObject(raw.publishing)) {
+      out.publishing.lastPublishedAtUtc = normalizeFreeText(raw.publishing.lastPublishedAtUtc, out.publishing.lastPublishedAtUtc);
+      out.publishing.lastCommit = normalizeFreeText(raw.publishing.lastCommit, out.publishing.lastCommit);
+      out.publishing.lastStatus = normalizeFreeText(raw.publishing.lastStatus, out.publishing.lastStatus);
+      out.publishing.lastError = normalizeFreeText(raw.publishing.lastError, out.publishing.lastError);
+    }
+    const rawOpening =
+      isObject(raw.content) && isObject(raw.content.opening)
+        ? raw.content.opening
+        : {};
+    out.content.opening.introQualityTarget = normalizeVideoQualityTarget(
+      rawOpening.introQualityTarget,
+      out.videoQualityTarget
+    );
+    out.content.opening.backgroundQualityTarget = normalizeVideoQualityTarget(
+      rawOpening.backgroundQualityTarget,
+      out.videoQualityTarget
+    );
 
     if (isObject(raw.featureToggles)) {
       Object.keys(out.featureToggles).forEach((key) => {
@@ -504,6 +817,19 @@
         out.pageToggles[key] = normalizeOnOff(raw.pageToggles[key], out.pageToggles[key]);
       });
     }
+
+    const rawPages = isObject(raw.pages) ? raw.pages : {};
+    Object.keys(out.pages).forEach((pageKey) => {
+      const toggleFallback = Object.prototype.hasOwnProperty.call(out.pageToggles, pageKey)
+        ? out.pageToggles[pageKey]
+        : pageKey === "index"
+          ? "ON"
+          : "OFF";
+      out.pages[pageKey] = normalizePageConfig(rawPages[pageKey], out.pages[pageKey], toggleFallback);
+      if (Object.prototype.hasOwnProperty.call(out.pageToggles, pageKey)) {
+        out.pageToggles[pageKey] = out.pages[pageKey].enabled ? "ON" : "OFF";
+      }
+    });
 
     if (isObject(raw.design)) {
       out.design.heroFramePad = normalizeNumber(raw.design.heroFramePad, out.design.heroFramePad, 0, 180);
@@ -577,6 +903,8 @@
     if (Array.isArray(raw.mediaLibrary)) {
       out.mediaLibrary = raw.mediaLibrary.map((item, index) => normalizeMediaItem(item, index));
     }
+
+    out.library = normalizeLibraryState(raw.library, out.library);
 
     const mediaIds = new Set(out.mediaLibrary.map((item) => item.id));
     DEFAULT_SETTINGS.mediaLibrary.forEach((item, index) => {
@@ -693,9 +1021,10 @@
     if (el.tagName === "A") el.removeAttribute("tabindex");
   }
 
-  function toEmbedUrl(input, fallback) {
+  function toEmbedUrl(input, fallback, qualityTarget = "hd1080") {
     const value = String(input || "").trim();
     if (!value) return fallback;
+    const requestedQuality = normalizeVideoQualityTarget(qualityTarget, "hd1080");
 
     const fallbackUrl = String(fallback || "").trim();
     let parsed;
@@ -727,9 +1056,11 @@
         rel: "0",
         playsinline: "1",
         modestbranding: "1",
-        vq: "hd1080",
         enablejsapi: "1"
       });
+      if (requestedQuality !== "auto") {
+        params.set("vq", requestedQuality);
+      }
       if (hasOrigin) {
         params.set("origin", window.location.origin);
         params.set("widget_referrer", `${window.location.origin}/`);
@@ -770,6 +1101,14 @@
   function applyOpeningContent(doc, settings) {
     const hero = doc.querySelector(".main-item");
     if (!hero) return;
+    const introQualityTarget = normalizeVideoQualityTarget(
+      settings?.content?.opening?.introQualityTarget,
+      settings?.videoQualityTarget || DEFAULT_SETTINGS.content.opening.introQualityTarget
+    );
+    const backgroundQualityTarget = normalizeVideoQualityTarget(
+      settings?.content?.opening?.backgroundQualityTarget,
+      settings?.videoQualityTarget || DEFAULT_SETTINGS.content.opening.backgroundQualityTarget
+    );
 
     const openingItems = Array.from(hero.querySelectorAll(".opening-item"));
     if (!openingItems.length) return;
@@ -785,6 +1124,12 @@
     const backgroundId = extractYoutubeVideoId(settings.content.opening.backgroundEmbedUrl, defaultBackgroundId);
 
     hero.setAttribute("data-intro-mode", useSingleMode ? "single" : "original");
+    hero.setAttribute("data-video-quality-target", backgroundQualityTarget);
+    if (typeof window !== "undefined") {
+      window.__OPENING_VIDEO_QUALITY_TARGET__ = backgroundQualityTarget;
+      window.__OPENING_INTRO_VIDEO_QUALITY_TARGET__ = introQualityTarget;
+      window.__OPENING_BACKGROUND_VIDEO_QUALITY_TARGET__ = backgroundQualityTarget;
+    }
 
     openingIframes.forEach((iframe, index) => {
       if (useSingleMode && index === 0) {
@@ -794,6 +1139,7 @@
         iframe.setAttribute("data-yt-id", defaultOpeningIds[index] || defaultOpeningIds[0]);
         iframe.setAttribute("title", `Opening ${index + 1}`);
       }
+      iframe.setAttribute("data-video-quality-target", introQualityTarget);
       iframe.setAttribute("src", "");
     });
 
@@ -804,6 +1150,7 @@
     if (finalIframe) {
       finalIframe.setAttribute("data-yt-id", backgroundId || defaultBackgroundId);
       finalIframe.setAttribute("title", "Background opening");
+      finalIframe.setAttribute("data-video-quality-target", backgroundQualityTarget);
       finalIframe.setAttribute("src", "");
     }
   }
@@ -1021,15 +1368,243 @@
     });
   }
 
+  function setEditorDensity(settings, density = "comfortable") {
+    return withMutation(settings, (draft) => {
+      draft.designTokens.editorDensity = normalizeDensity(density, draft.designTokens.editorDensity);
+    });
+  }
+
+  function setReducedMotion(settings, reducedMotion = "OFF") {
+    return withMutation(settings, (draft) => {
+      draft.designTokens.reducedMotion = normalizeOnOff(reducedMotion, draft.designTokens.reducedMotion);
+    });
+  }
+
+  function setSnap(settings, options = {}) {
+    return withMutation(settings, (draft) => {
+      const raw = isObject(options) ? options : {};
+      if (Object.prototype.hasOwnProperty.call(raw, "enabled")) {
+        draft.layers.snap.enabled = Boolean(raw.enabled);
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "size")) {
+        draft.layers.snap.size = normalizeNumber(raw.size, draft.layers.snap.size, 1, 64);
+      }
+    });
+  }
+
+  function setPageSeo(settings, pageKey, seoUpdates = {}) {
+    return withMutation(settings, (draft) => {
+      if (!pageKey || !Object.prototype.hasOwnProperty.call(draft.pages, pageKey)) return;
+      const current = draft.pages[pageKey];
+      const updates = isObject(seoUpdates) ? seoUpdates : {};
+      const enabled =
+        typeof updates.enabled === "boolean"
+          ? updates.enabled
+          : current.enabled;
+      const mergedSeo = normalizeSeo({ ...current.seo, ...updates }, current.seo);
+      mergedSeo.noindex = typeof updates.noindex === "boolean" ? Boolean(updates.noindex) : !enabled;
+      draft.pages[pageKey] = {
+        ...current,
+        label: normalizeText(updates.label, current.label),
+        enabled,
+        seo: mergedSeo
+      };
+      if (Object.prototype.hasOwnProperty.call(draft.pageToggles, pageKey)) {
+        draft.pageToggles[pageKey] = enabled ? "ON" : "OFF";
+      }
+    });
+  }
+
+  function ensureFreeLayoutStyle(style) {
+    const normalized = normalizeSectionStyle(style, DEFAULT_SECTION_STYLE);
+    const defaultW = Math.min(1800, Math.max(300, Number(normalized.maxWidth || 860)));
+    const defaultH = 220;
+    return normalizeSectionStyle(
+      {
+        ...normalized,
+        layoutMode: "free",
+        freeW: normalized.freeW > 0 ? normalized.freeW : defaultW,
+        freeH: normalized.freeH > 0 ? normalized.freeH : defaultH
+      },
+      normalized
+    );
+  }
+
+  function resolveTargetLayerKeys(draft, layerKeys) {
+    const allKeys = new Set(getAllSectionKeys(draft));
+    const seen = new Set();
+    const out = [];
+    (Array.isArray(layerKeys) ? layerKeys : []).forEach((key) => {
+      if (!allKeys.has(key) || seen.has(key)) return;
+      seen.add(key);
+      out.push(key);
+    });
+    return out;
+  }
+
+  function applyAlignment(settings, layerKeys = [], direction = "left") {
+    return withMutation(settings, (draft) => {
+      const keys = resolveTargetLayerKeys(draft, layerKeys);
+      if (keys.length < 2) return;
+
+      const styles = keys.map((key) => {
+        const current = draft.layout.sectionStyles[key] || DEFAULT_SECTION_STYLE;
+        const free = ensureFreeLayoutStyle(current);
+        draft.layout.sectionStyles[key] = free;
+        return { key, style: free };
+      });
+
+      const leftEdge = Math.min(...styles.map((item) => item.style.freeX));
+      const rightEdge = Math.max(...styles.map((item) => item.style.freeX + item.style.freeW));
+      const centerEdge = (leftEdge + rightEdge) / 2;
+
+      styles.forEach((item) => {
+        let nextX = item.style.freeX;
+        if (direction === "center") {
+          nextX = Math.round(centerEdge - item.style.freeW / 2);
+        } else if (direction === "right") {
+          nextX = Math.round(rightEdge - item.style.freeW);
+        } else {
+          nextX = Math.round(leftEdge);
+        }
+        draft.layout.sectionStyles[item.key] = normalizeSectionStyle(
+          { ...item.style, layoutMode: "free", freeX: nextX },
+          item.style
+        );
+      });
+
+      draft.layers.selectionMode = keys.length > 1 ? "multi" : draft.layers.selectionMode;
+    });
+  }
+
+  function applyDistribution(settings, layerKeys = [], axis = "x") {
+    return withMutation(settings, (draft) => {
+      const keys = resolveTargetLayerKeys(draft, layerKeys);
+      if (keys.length < 3) return;
+
+      const useY = String(axis || "x").toLowerCase() === "y";
+      const styles = keys.map((key) => {
+        const current = draft.layout.sectionStyles[key] || DEFAULT_SECTION_STYLE;
+        const free = ensureFreeLayoutStyle(current);
+        draft.layout.sectionStyles[key] = free;
+        return { key, style: free };
+      });
+
+      const sorted = styles.sort((a, b) => {
+        const aCenter = useY ? a.style.freeY + a.style.freeH / 2 : a.style.freeX + a.style.freeW / 2;
+        const bCenter = useY ? b.style.freeY + b.style.freeH / 2 : b.style.freeX + b.style.freeW / 2;
+        return aCenter - bCenter;
+      });
+
+      const firstCenter = useY
+        ? sorted[0].style.freeY + sorted[0].style.freeH / 2
+        : sorted[0].style.freeX + sorted[0].style.freeW / 2;
+      const lastCenter = useY
+        ? sorted[sorted.length - 1].style.freeY + sorted[sorted.length - 1].style.freeH / 2
+        : sorted[sorted.length - 1].style.freeX + sorted[sorted.length - 1].style.freeW / 2;
+      const step = (lastCenter - firstCenter) / (sorted.length - 1);
+
+      sorted.forEach((item, index) => {
+        if (index === 0 || index === sorted.length - 1) return;
+        const nextCenter = firstCenter + step * index;
+        if (useY) {
+          const nextY = Math.round(nextCenter - item.style.freeH / 2);
+          draft.layout.sectionStyles[item.key] = normalizeSectionStyle(
+            { ...item.style, layoutMode: "free", freeY: nextY },
+            item.style
+          );
+          return;
+        }
+        const nextX = Math.round(nextCenter - item.style.freeW / 2);
+        draft.layout.sectionStyles[item.key] = normalizeSectionStyle(
+          { ...item.style, layoutMode: "free", freeX: nextX },
+          item.style
+        );
+      });
+
+      draft.layers.selectionMode = keys.length > 1 ? "multi" : draft.layers.selectionMode;
+    });
+  }
+
+  function updateLibraryTemplateRecents(draft, templateId) {
+    const token = normalizeFreeText(templateId, "");
+    if (!token) return;
+    const next = [token, ...draft.library.recentTemplateIds.filter((item) => item !== token)];
+    draft.library.recentTemplateIds = next.slice(0, 32);
+  }
+
+  function setTemplateFavorite(settings, templateId, favorite = true) {
+    return withMutation(settings, (draft) => {
+      const token = normalizeFreeText(templateId, "");
+      if (!token) return;
+      const current = draft.library.favoriteTemplateIds.filter((item) => item !== token);
+      if (favorite) current.unshift(token);
+      draft.library.favoriteTemplateIds = current.slice(0, 64);
+      if (favorite) {
+        updateLibraryTemplateRecents(draft, token);
+      }
+    });
+  }
+
+  function recordTemplateUsage(settings, templateId) {
+    return withMutation(settings, (draft) => {
+      updateLibraryTemplateRecents(draft, templateId);
+    });
+  }
+
   function upsertMediaItem(settings, item) {
     return withMutation(settings, (draft) => {
       const normalized = normalizeMediaItem(item, draft.mediaLibrary.length);
       const existingIndex = draft.mediaLibrary.findIndex((entry) => entry.id === normalized.id);
+      const nowIso = new Date().toISOString();
       if (existingIndex >= 0) {
-        draft.mediaLibrary[existingIndex] = normalized;
+        const existing = draft.mediaLibrary[existingIndex];
+        const createdAtUtc = normalizeFreeText(normalized.createdAtUtc, existing.createdAtUtc || nowIso);
+        draft.mediaLibrary[existingIndex] = normalizeMediaItem(
+          {
+            ...existing,
+            ...normalized,
+            createdAtUtc,
+            updatedAtUtc: normalizeFreeText(normalized.updatedAtUtc, nowIso),
+            lastUsedAtUtc: normalizeFreeText(normalized.lastUsedAtUtc, existing.lastUsedAtUtc || ""),
+            usageCount: normalizeCount(normalized.usageCount, existing.usageCount)
+          },
+          existingIndex
+        );
       } else {
-        draft.mediaLibrary.push(normalized);
+        draft.mediaLibrary.push(
+          normalizeMediaItem(
+            {
+              ...normalized,
+              createdAtUtc: normalizeFreeText(normalized.createdAtUtc, nowIso),
+              updatedAtUtc: normalizeFreeText(normalized.updatedAtUtc, nowIso),
+              lastUsedAtUtc: normalizeFreeText(normalized.lastUsedAtUtc, ""),
+              usageCount: normalizeCount(normalized.usageCount, 0)
+            },
+            draft.mediaLibrary.length
+          )
+        );
       }
+    });
+  }
+
+  function recordMediaUsage(settings, mediaId) {
+    return withMutation(settings, (draft) => {
+      const target = normalizeFreeText(mediaId, "");
+      if (!target) return;
+      const index = draft.mediaLibrary.findIndex((item) => item.id === target);
+      if (index < 0) return;
+      const nowIso = new Date().toISOString();
+      const media = draft.mediaLibrary[index];
+      draft.mediaLibrary[index] = normalizeMediaItem(
+        {
+          ...media,
+          lastUsedAtUtc: nowIso,
+          updatedAtUtc: nowIso,
+          usageCount: normalizeCount(media.usageCount, 0) + 1
+        },
+        index
+      );
     });
   }
 
@@ -1127,7 +1702,11 @@
     if (teaser) {
       teaser.setAttribute(
         "src",
-        toEmbedUrl(settings.content.superSyd.teaserEmbedUrl, DEFAULT_SETTINGS.content.superSyd.teaserEmbedUrl)
+        toEmbedUrl(
+          settings.content.superSyd.teaserEmbedUrl,
+          DEFAULT_SETTINGS.content.superSyd.teaserEmbedUrl,
+          settings.videoQualityTarget
+        )
       );
     }
 
@@ -1135,7 +1714,11 @@
     if (previs) {
       previs.setAttribute(
         "src",
-        toEmbedUrl(settings.content.superSyd.previsEmbedUrl, DEFAULT_SETTINGS.content.superSyd.previsEmbedUrl)
+        toEmbedUrl(
+          settings.content.superSyd.previsEmbedUrl,
+          DEFAULT_SETTINGS.content.superSyd.previsEmbedUrl,
+          settings.videoQualityTarget
+        )
       );
     }
   }
@@ -1358,6 +1941,7 @@
 
     const html = doc.documentElement || document.documentElement;
     html.setAttribute("data-site-theme", settings.theme.toLowerCase());
+    html.setAttribute("data-reduced-motion", settings.designTokens.reducedMotion === "ON" ? "on" : "off");
     applyDesignSettings(doc, settings);
     applyOpeningContent(doc, settings);
 
@@ -1413,10 +1997,12 @@
     HOME_SECTION_KEYS: [...HOME_BASE_SECTION_KEYS],
     HOME_SECTION_LABELS: { ...HOME_BASE_SECTION_LABELS },
     CUSTOM_BLOCK_TYPE_LABELS: { ...CUSTOM_BLOCK_TYPE_LABELS },
+    VIDEO_QUALITY_LEVELS: [...VIDEO_QUALITY_LEVELS],
     CUSTOM_BLOCK_TEMPLATES: clone(CUSTOM_BLOCK_TEMPLATES),
     DEFAULT_SETTINGS: clone(DEFAULT_SETTINGS),
     PAGE_KEY_BY_FILE: clone(PAGE_KEY_BY_FILE),
     isOn,
+    normalizeVideoQualityTarget,
     toEmbedUrl,
     normalizeSettings,
     loadSettings,
@@ -1441,7 +2027,16 @@
     setSectionVisibility,
     setSectionLock,
     setSectionStyle,
+    setPageSeo,
+    setEditorDensity,
+    setReducedMotion,
+    setSnap,
+    applyAlignment,
+    applyDistribution,
+    recordTemplateUsage,
+    setTemplateFavorite,
     upsertMediaItem,
+    recordMediaUsage,
     deleteMediaItem,
     applySiteSettings
   };
